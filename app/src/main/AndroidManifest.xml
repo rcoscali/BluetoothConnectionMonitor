@@ -3,11 +3,18 @@
     package="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor">
 
     <application
+        android:fullBackupContent="@xml/bluetooth_connection_manager_backup"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+        <!--========================================================================-->
+        <!-- Connection Lost activity                                               -->
+        <!-- This activity is launched by the MonitorConnection background activity -->
+        <!-- when loss of connection is detected.                                   -->
+        <!--========================================================================-->
         <activity
             android:name=".ConnectionLostAlarm"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -15,11 +22,17 @@
             android:theme="@style/FullscreenTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <!-- Added only for debug. To be removed once launched throught main activity -->
-                <category android:name="android.intent.category.LAUNCHER" />
-
             </intent-filter>
         </activity>
+
+        <!--========================================================================-->
+        <!-- Bluetooth Connect activity                                             -->
+        <!-- This is the main activity (the first) of the application               -->
+        <!-- It displays the list of availables bluetooth devices to which          -->
+        <!-- the user choose to connect to monitor the locality.                    -->
+        <!-- Once a device selected, the background MonitorConnection               -->
+        <!-- activity is launched.                                                  -->
+        <!--========================================================================-->
         <activity
             android:name=".BluetoothConnect"
             android:label="@string/title_activity_bluetooth_connect"
@@ -32,6 +45,7 @@
         </activity>
     </application>
 
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL"/>
     <uses-permission android:name="android.permission.VIBRATE"/>

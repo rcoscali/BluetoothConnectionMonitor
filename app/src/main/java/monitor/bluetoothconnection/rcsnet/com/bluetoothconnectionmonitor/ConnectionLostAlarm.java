@@ -109,6 +109,8 @@ public class ConnectionLostAlarm extends AppCompatActivity {
     private final View.OnClickListener mClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            mMediaPlayer.stop();
+            mMediaPlayer.release();
             finish();
         }
     };
@@ -123,87 +125,15 @@ public class ConnectionLostAlarm extends AppCompatActivity {
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
         AssetFileDescriptor afd = null;
-        try
-        {
-           afd = getAssets().openFd("alarm.wav");
-        }
-        catch (IOException e)
-        {
-            Toast.makeText(this, "Cannot access alarm sound file in assets !!", Toast.LENGTH_LONG).show();
-            Log.e("BluetoothConnectionLost", Log.getStackTraceString(e));
-        }
-        mMediaPlayer = new MediaPlayer();
-        try
-        {
-            mMediaPlayer.setDataSource(afd.getFileDescriptor());
-        }
-        catch (IOException e)
-        {
-            Toast.makeText(this, "Cannot create media player with alarm sound file in assets !!", Toast.LENGTH_LONG).show();
-            Log.e("BluetoothConnectionLost", Log.getStackTraceString(e));
-        }
-        if (mMediaPlayer == null)
-        {
-            Toast.makeText(this, "Will not play alarm sound file !!", Toast.LENGTH_LONG).show();
-        }
-        else
-        {
-            mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mediaPlayer) {
-                    try
-                    {
-                        mediaPlayer.start();
-                    }
-                    catch (Exception e)
-                    {
-                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                        Log.e("BluetoothConnectionLost", Log.getStackTraceString(e));
-                    }
-                }
-            });
-            mMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
 
-            // Get audio focus
-            AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            int result = audioManager.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
-                                                            @Override
-                                                            public void onAudioFocusChange(int i) {
-                                                                if (i == AudioManager.AUDIOFOCUS_GAIN ||
-                                                                    i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT ||
-                                                                    i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE ||
-                                                                    i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
-                                                                    try
-                                                                    {
-                                                                        mMediaPlayer.prepareAsync();
-                                                                    }
-                                                                    catch (Exception e)
-                                                                    {
-                                                                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                                                                        Log.e("BluetoothConnectionLost", Log.getStackTraceString(e));
-                                                                    }
-                                                                else if (i == AudioManager.AUDIOFOCUS_LOSS)
-                                                                    mMediaPlayer.stop();
-                                                                else if (i == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||
-                                                                        i == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK)
-                                                                    mMediaPlayer.pause();
-                                                            }
-                                                        },
-                    AudioManager.STREAM_MUSIC,
-                    AudioManager.AUDIOFOCUS_GAIN);
-
-            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                try
-                {
-                    mMediaPlayer.prepareAsync();
-                }
-                catch (Exception e)
-                {
-                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-                    Log.e("BluetoothConnectionLost", Log.getStackTraceString(e));
-                }
+        mMediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.alarm);
+        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                mediaPlayer.start();
             }
-        }
+        });
+        mMediaPlayer.start();
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
@@ -218,7 +148,6 @@ public class ConnectionLostAlarm extends AppCompatActivity {
         // while interacting with the UI.
         findViewById(R.id.dismiss_button).setOnTouchListener(mDelayHideTouchListener);
         findViewById(R.id.dismiss_button).setOnClickListener(mClickListener);
-
     }
 
     @Override
