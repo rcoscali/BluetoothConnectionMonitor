@@ -3,7 +3,9 @@ package monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.PowerManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -120,7 +122,32 @@ public class ConnectionLostAlarm extends AppCompatActivity {
                 mediaPlayer.start();
             }
         });
-        mMediaPlayer.prepareAsync();
+        mMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+
+        // Get audio focus
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        int result = audioManager.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
+                                                        @Override
+                                                        public void onAudioFocusChange(int i) {
+                                                            if (i == AudioManager.AUDIOFOCUS_GAIN ||
+                                                                i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT ||
+                                                                i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE ||
+                                                                i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+                                                                mMediaPlayer.prepareAsync();
+                                                            else if (i == AudioManager.AUDIOFOCUS_LOSS)
+                                                                mMediaPlayer.stop();
+                                                            else if (i == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||
+                                                                     i == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK)
+                                                                mMediaPlayer.pause();
+                                                        }
+                                                    },
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN);
+
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            mMediaPlayer.prepareAsync();
+        }
+
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
