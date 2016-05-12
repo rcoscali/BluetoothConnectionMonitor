@@ -2,6 +2,7 @@ package monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.Resources;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -17,6 +18,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.io.InputStream;
@@ -120,27 +122,42 @@ public class ConnectionLostAlarm extends AppCompatActivity {
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
-        //mMediaPlayer = MediaPlayer.create(this, R.raw.alarm);
-        //Log("BluetoothConnectionLost", "Alarm sound file path name: ");
-        //Log("BluetoothConnectionLost", getString(R.string.alarm_file_pathname_string));
-        //mMediaPlayer = MediaPlayer.create(this, Uri.fromFile(new File(getString(R.string.alarm_file_pathname_string))));
-        mMediaPlayer = MediaPlayer.create(this, Uri.fromFile(new File("assets/alarm.wav")));
+        AssetFileDescriptor afd = null;
+        try
+        {
+           afd = getAssets().openFd("alarm.wav");
+        }
+        catch (IOException e)
+        {
+            Toast.makeText(this, "Cannot access alarm sound file in assets !!", Toast.LENGTH_LONG).show();
+            Log.e("BluetoothConnectionLost", Log.getStackTraceString(e));
+        }
+        mMediaPlayer = new MediaPlayer();
+        try
+        {
+            mMediaPlayer.setDataSource(afd.getFileDescriptor());
+        }
+        catch (IOException e)
+        {
+            Toast.makeText(this, "Cannot create media player with alarm sound file in assets !!", Toast.LENGTH_LONG).show();
+            Log.e("BluetoothConnectionLost", Log.getStackTraceString(e));
+        }
         if (mMediaPlayer == null)
         {
-            Context context = getApplicationContext();
-            CharSequence text = "Cannot find alarm sound file !!";
-            int duration = Toast.LENGTH_LONG;
-
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
+            Toast.makeText(this, "Will not play alarm sound file !!", Toast.LENGTH_LONG).show();
         }
-        else {
+        else
+        {
             mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mediaPlayer) {
-                    try {
+                    try
+                    {
                         mediaPlayer.start();
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
+                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                         Log.e("BluetoothConnectionLost", Log.getStackTraceString(e));
                     }
                 }
@@ -153,12 +170,16 @@ public class ConnectionLostAlarm extends AppCompatActivity {
                                                             @Override
                                                             public void onAudioFocusChange(int i) {
                                                                 if (i == AudioManager.AUDIOFOCUS_GAIN ||
-                                                                        i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT ||
-                                                                        i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE ||
-                                                                        i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
-                                                                    try {
+                                                                    i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT ||
+                                                                    i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE ||
+                                                                    i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+                                                                    try
+                                                                    {
                                                                         mMediaPlayer.prepareAsync();
-                                                                    } catch (Exception e) {
+                                                                    }
+                                                                    catch (Exception e)
+                                                                    {
+                                                                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                                                                         Log.e("BluetoothConnectionLost", Log.getStackTraceString(e));
                                                                     }
                                                                 else if (i == AudioManager.AUDIOFOCUS_LOSS)
@@ -172,9 +193,13 @@ public class ConnectionLostAlarm extends AppCompatActivity {
                     AudioManager.AUDIOFOCUS_GAIN);
 
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                try {
+                try
+                {
                     mMediaPlayer.prepareAsync();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
+                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
                     Log.e("BluetoothConnectionLost", Log.getStackTraceString(e));
                 }
             }
