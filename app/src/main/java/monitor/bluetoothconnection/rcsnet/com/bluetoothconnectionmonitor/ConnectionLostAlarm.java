@@ -1,12 +1,18 @@
 package monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.res.Resources;
+import android.media.MediaPlayer;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+
+import java.net.URL;
+import java.io.InputStream;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -122,6 +128,12 @@ public class ConnectionLostAlarm extends AppCompatActivity {
         findViewById(R.id.dismiss_button).setOnClickListener(mClickListener);
     }
 
+    private void playsound() throws Exception
+    {
+        MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.alarm);
+        mediaPlayer.start();
+    }
+
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
@@ -130,6 +142,12 @@ public class ConnectionLostAlarm extends AppCompatActivity {
         // created, to briefly hint to the user that UI controls
         // are available.
         delayedHide(100);
+        try
+        {
+            playsound();
+        }
+        catch (Exception e)
+        {}
     }
 
     private void toggle() {
