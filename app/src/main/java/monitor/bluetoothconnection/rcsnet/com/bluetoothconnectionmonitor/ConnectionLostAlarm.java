@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.util.Log;
 
 import java.net.URL;
 import java.io.InputStream;
@@ -119,7 +120,12 @@ public class ConnectionLostAlarm extends AppCompatActivity {
         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mediaPlayer) {
-                mediaPlayer.start();
+                try {
+                    mediaPlayer.start();
+                } catch (Exception e)
+                {
+                    Log.e("BluetoothConnectionLost",Log.getStackTraceString(e));
+                }
             }
         });
         mMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
@@ -133,7 +139,11 @@ public class ConnectionLostAlarm extends AppCompatActivity {
                                                                 i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT ||
                                                                 i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE ||
                                                                 i == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
-                                                                mMediaPlayer.prepareAsync();
+                                                                try {
+                                                                    mMediaPlayer.prepareAsync();
+                                                                } catch (Exception e) {
+                                                                    Log.e("BluetoothConnectionLost",Log.getStackTraceString(e));
+                                                                }
                                                             else if (i == AudioManager.AUDIOFOCUS_LOSS)
                                                                 mMediaPlayer.stop();
                                                             else if (i == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||
@@ -145,7 +155,11 @@ public class ConnectionLostAlarm extends AppCompatActivity {
                 AudioManager.AUDIOFOCUS_GAIN);
 
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            mMediaPlayer.prepareAsync();
+            try {
+                mMediaPlayer.prepareAsync();
+            } catch (Exception e) {
+                Log.e("BluetoothConnectionLost",Log.getStackTraceString(e));
+            }
         }
 
 
