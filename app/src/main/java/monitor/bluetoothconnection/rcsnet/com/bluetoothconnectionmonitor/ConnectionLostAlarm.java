@@ -13,6 +13,7 @@ import android.view.View;
 
 import java.net.URL;
 import java.io.InputStream;
+import java.lang.Exception;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -56,6 +57,7 @@ public class ConnectionLostAlarm extends AppCompatActivity {
                     | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         }
     };
+    private MediaPlayer mMediaPlayer = null;
     private View mControlsView;
     private final Runnable mShowPart2Runnable = new Runnable() {
         @Override
@@ -111,7 +113,14 @@ public class ConnectionLostAlarm extends AppCompatActivity {
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
-
+        mMediaPlayer = MediaPlayer.create(this, R.raw.alarm);
+        mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mediaPlayer) {
+                mediaPlayer.start();
+            }
+        });
+        mMediaPlayer.prepareAsync();
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
@@ -128,12 +137,6 @@ public class ConnectionLostAlarm extends AppCompatActivity {
         findViewById(R.id.dismiss_button).setOnClickListener(mClickListener);
     }
 
-    private void playsound() throws Exception
-    {
-        MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.alarm);
-        mediaPlayer.start();
-    }
-
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
@@ -142,12 +145,6 @@ public class ConnectionLostAlarm extends AppCompatActivity {
         // created, to briefly hint to the user that UI controls
         // are available.
         delayedHide(100);
-        try
-        {
-            playsound();
-        }
-        catch (Exception e)
-        {}
     }
 
     private void toggle() {
