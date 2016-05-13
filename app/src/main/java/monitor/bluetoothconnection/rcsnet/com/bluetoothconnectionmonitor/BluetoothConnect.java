@@ -63,7 +63,7 @@ public class BluetoothConnect extends AppCompatActivity
                     public void onClick(View view)
                     {
                         Snackbar.make(view,
-                                      "Replace with your own action",
+                                      "Monitor this device",
                                       Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     }
                 }
@@ -89,6 +89,11 @@ public class BluetoothConnect extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings)
         {
+            return true;
+        }
+        else if (id == R.id.action_quit)
+        {
+            finish();
             return true;
         }
 

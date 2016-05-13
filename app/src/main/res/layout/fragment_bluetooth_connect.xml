@@ -15,6 +15,16 @@
         android:autoText="true"
         android:textStyle="bold"
         android:textAlignment="center"
-        android:textColor="@color/accent_material_light" />
+        android:textColor="@color/accent_material_light"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:background="@drawable/abc_list_pressed_holo_dark" />
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/section_list"
+        android:layout_below="@+id/section_label"
+        android:layout_toEndOf="@+id/section_label" />
 
 </RelativeLayout>
