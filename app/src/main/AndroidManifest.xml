@@ -1,49 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor">
-
-    <application
-        android:fullBackupContent="@xml/bluetooth_connection_manager_backup"
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-
-        <!--========================================================================-->
-        <!-- Connection Lost activity                                               -->
-        <!-- This activity is launched by the MonitorConnection background activity -->
-        <!-- when loss of connection is detected.                                   -->
-        <!--========================================================================-->
-        <activity
-            android:name=".ConnectionLostAlarm"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/app_name"
-            android:theme="@style/FullscreenTheme">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-            </intent-filter>
-        </activity>
-
-        <!--========================================================================-->
-        <!-- Bluetooth Connect activity                                             -->
-        <!-- This is the main activity (the first) of the application               -->
-        <!-- It displays the list of availables bluetooth devices to which          -->
-        <!-- the user choose to connect to monitor the locality.                    -->
-        <!-- Once a device selected, the background MonitorConnection               -->
-        <!-- activity is launched.                                                  -->
-        <!--========================================================================-->
-        <activity
-            android:name=".BluetoothConnect"
-            android:label="@string/title_activity_bluetooth_connect"
-            android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
+          package="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor">
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
@@ -52,4 +9,63 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED"/>
+
+    <application
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/bluetooth_connection_manager_backup"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <!-- ======================================================================== -->
+        <!-- Connection Lost activity -->
+        <!-- This activity is launched by the MonitorConnection background activity -->
+        <!-- when loss of connection is detected. -->
+        <!-- ======================================================================== -->
+        <activity
+            android:name=".ConnectionLostAlarm"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/app_name"
+            android:theme="@style/FullscreenTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+            </intent-filter>
+        </activity>
+
+        <!-- ======================================================================== -->
+        <!-- Bluetooth Connect activity -->
+        <!-- This is the main activity (the first) of the application -->
+        <!-- It displays the list of availables bluetooth devices to which -->
+        <!-- the user choose to connect to monitor the locality. -->
+        <!-- Once a device selected, the background MonitorConnection -->
+        <!-- activity is launched. -->
+        <!-- ======================================================================== -->
+        <activity
+            android:name=".BluetoothConnect"
+            android:label="@string/title_activity_bluetooth_connect"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.VIEW"/>
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".BluetoothClientServer"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_bluetooth_client_server"
+            android:parentActivityName=".BluetoothConnect"
+            android:theme="@style/FullscreenTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor.BluetoothConnect"/>
+            <intent-filter>
+                <action android:name="com.rcsnet.connectionmonitor.ClientServerDevice"/>
+            </intent-filter>
+        </activity>
+    </application>
+
 </manifest>

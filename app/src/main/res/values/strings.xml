@@ -10,4 +10,8 @@
     <string name="row_item_icon">Row item icon</string>
     <string name="action_restart_scan">Restart devices scan</string>
     <string name="action_stop_scan">Stop devices scan</string>
+
+    <string name="title_activity_bluetooth_client_server">BluetoothClientServer</string>
+    <string name="client_button">Launch Client</string>
+    <string name="server_button">Launch Server</string>
 </resources>

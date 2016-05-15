@@ -19,6 +19,8 @@ import android.util.Log;
 import android.view.*;
 import android.widget.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class BluetoothConnect extends AppCompatActivity
@@ -135,14 +137,13 @@ public class BluetoothConnect extends AppCompatActivity
         private static final String ARG_SECTION_NUMBER = "section_number";
         private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 0;
 
-        private Set<BluetoothDevice> devices;
-
-        private int mSectionNumber;
-        private View mRootView;
-        private TextView mTextView;
-        private ListView mListView;
-        private ProgressBar mProgressBar;
-        private BluetoothAdapter mBluetoothAdapter;
+        private int                   mSectionNumber;
+        private View                  mRootView;
+        private TextView              mTextView;
+        private ListView              mListView;
+        private ProgressBar           mProgressBar;
+        private BluetoothAdapter      mBluetoothAdapter;
+        private List<BluetoothDevice> mDeviceList;
 
         public PlaceholderFragment()
         {
@@ -176,6 +177,20 @@ public class BluetoothConnect extends AppCompatActivity
             mListView.setAdapter (new ArrayAdapter<String> (this.getActivity (),
                                                             R.layout.rowitem,
                                                             R.id.row_item_text));
+            mListView.setOnItemClickListener (new AdapterView.OnItemClickListener ()
+            {
+                @Override
+                public
+                void onItemClick (AdapterView<?> parent, View view, int position, long id)
+                {
+                    BluetoothDevice device = mDeviceList.get (position);
+                    Log.v("BluetoothMonitor",
+                          "Device selected: " + device.getName ());
+                    Intent intent = new Intent (getActivity ().getApplicationContext (), BluetoothClientServer.class);
+                    intent.putExtra("device", device);
+                    startActivity (intent);
+                }
+            });
             mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter ();
             if (mBluetoothAdapter == null)
             {
@@ -232,6 +247,7 @@ public class BluetoothConnect extends AppCompatActivity
                 else if (BluetoothDevice.ACTION_FOUND.equals(action))
                 {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    mDeviceList.add (device);
                     String item = device.getName () + " " + device.getAddress ();
                     Log.v("BluetoothMonitor", "Adding new device item: " + item);
                     ((ArrayAdapter<String>)mListView.getAdapter ()).add(item);
@@ -246,6 +262,8 @@ public class BluetoothConnect extends AppCompatActivity
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
             startActivity(discoverableIntent);
             IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
             getContext().registerReceiver(mBluetoothReceiver, filter);
             mBluetoothAdapter.startDiscovery();
         }
@@ -261,13 +279,14 @@ public class BluetoothConnect extends AppCompatActivity
         private
         void addBluetoothKnownDevices()
         {
-            devices = mBluetoothAdapter.getBondedDevices();
-            for (BluetoothDevice device : devices) {
+            mDeviceList = new ArrayList<> ();
+            Set<BluetoothDevice> deviceList = mBluetoothAdapter.getBondedDevices ();
+            for (BluetoothDevice device : deviceList) {
+                mDeviceList.add (device);
                 String item = device.getName () + " " + device.getAddress ();
                 Log.v("BluetoothMonitor", "Adding known device item: " + item);
                 ((ArrayAdapter<String>)mListView.getAdapter ()).add(item);
             }
-
         }
 
         @Override

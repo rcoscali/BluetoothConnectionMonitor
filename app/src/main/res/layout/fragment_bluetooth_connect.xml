@@ -25,12 +25,12 @@
         android:id="@+id/section_list"/>
 
     <ProgressBar
-        android:layout_width="164dp"
+        android:layout_width="fill_parent"
         android:layout_height="48dp"
         android:id="@+id/progressBar"
-        android:indeterminate="true"
+        android:indeterminate="false"
         android:visibility="visible"
         android:progress="@android:integer/config_mediumAnimTime"
-        android:background="@android:drawable/spinner_background"/>
+        android:layout_gravity="center"/>
 
 </LinearLayout>
