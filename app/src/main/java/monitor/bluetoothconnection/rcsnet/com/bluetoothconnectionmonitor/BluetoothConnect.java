@@ -1,25 +1,17 @@
 package monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor;
 
-import android.bluetooth.BluetoothAdapter;
+import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-
+import android.view.*;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class BluetoothConnect extends AppCompatActivity
 {
@@ -111,6 +103,8 @@ public class BluetoothConnect extends AppCompatActivity
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
 
+        private int mSectionNumber;
+
         public PlaceholderFragment()
         {
         }
@@ -133,51 +127,28 @@ public class BluetoothConnect extends AppCompatActivity
                                  ViewGroup container,
                                  Bundle savedInstanceState)
         {
-            Log.v("BluetoothMonitor", "Fragment - onCreateView" + getString(R.string.section_format,
-                    getArguments().getInt(ARG_SECTION_NUMBER)));
+            mSectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
+            Log.v("BluetoothMonitor",
+                  "Fragment - onCreateView: " + getString(R.string.section_format, mSectionNumber));
             View rootView = inflater.inflate(R.layout.fragment_bluetooth_connect, container, false);
             TextView textView = (TextView) rootView.findViewById(R.id.section_label);
             textView.setText(getString(R.string.section_format,
-                                       getArguments().getInt(ARG_SECTION_NUMBER)));
-            switch (getArguments().getInt(ARG_SECTION_NUMBER))
-            {
-                case 0:
-                    doStep1();
-                    break;
-                case 1:
-                    doStep2();
-                    break;
-                case 2:
-                    doStep3();
-                    break;
-            }
+                                       mSectionNumber));
             return rootView;
         }
 
-        /*
-         * Device Connection Setup: First Step
-         */
-        private void doStep1()
+        @Override
+        public void onStart()
         {
-            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (bluetoothAdapter == null)
-                Toast.makeText(getContext(), "Bluetooth not available", Toast.LENGTH_SHORT).show();
-            else
-                Toast.makeText(getContext(), "Bluetooth available", Toast.LENGTH_SHORT).show();
+            super.onStart ();
+            Log.v("BluetoothMonitor", "Fragment - onStart: section number #" + mSectionNumber);
         }
 
-        /*
-         * Device Connection Setup: Second Step
-         */
-        private void doStep2()
+        @Override
+        public void onResume()
         {
-        }
-
-        /*
-         * Device Connection Setup: Third Step
-         */
-        private void doStep3()
-        {
+            super.onResume();
+            Log.v("BluetoothMonitor", "Fragment - onResume: section number #" + mSectionNumber);
         }
     }
 
@@ -205,7 +176,7 @@ public class BluetoothConnect extends AppCompatActivity
         public int getCount()
         {
             // Show 3 total pages.
-            return 3;
+            return 1;
         }
 
         @Override
