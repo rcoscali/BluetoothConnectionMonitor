@@ -1,7 +1,11 @@
 package monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -13,8 +17,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.*;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
+
+import java.util.Set;
 
 public class BluetoothConnect extends AppCompatActivity
 {
@@ -59,8 +64,11 @@ public class BluetoothConnect extends AppCompatActivity
                     public void onClick(View view)
                     {
                         Snackbar.make(view,
-                                      "Monitor this device",
-                                      Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                                      "Restart scan",
+                                      Snackbar.LENGTH_LONG).setAction("ActionRestartScan", null).show();
+                        Snackbar.make(view,
+                                      "Stop scan",
+                                      Snackbar.LENGTH_LONG).setAction("ActionStopScan", null).show();
                     }
                 }
         );
@@ -96,6 +104,16 @@ public class BluetoothConnect extends AppCompatActivity
         {
             return true;
         }
+        else if (id == R.id.action_restart_scan)
+        {
+            BluetoothAdapter.getDefaultAdapter ().startDiscovery ();
+            return true;
+        }
+        else if (id == R.id.action_stop_scan)
+        {
+            BluetoothAdapter.getDefaultAdapter ().cancelDiscovery ();
+            return true;
+        }
         else if (id == R.id.action_quit)
         {
             finish();
@@ -117,7 +135,14 @@ public class BluetoothConnect extends AppCompatActivity
         private static final String ARG_SECTION_NUMBER = "section_number";
         private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 0;
 
+        private Set<BluetoothDevice> devices;
+
         private int mSectionNumber;
+        private View mRootView;
+        private TextView mTextView;
+        private ListView mListView;
+        private ProgressBar mProgressBar;
+        private BluetoothAdapter mBluetoothAdapter;
 
         public PlaceholderFragment()
         {
@@ -144,27 +169,38 @@ public class BluetoothConnect extends AppCompatActivity
             mSectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
             Log.v("BluetoothMonitor",
                   "Fragment - onCreateView: " + getString(R.string.section_format, mSectionNumber));
-            View             rootView         = inflater.inflate(R.layout.fragment_bluetooth_connect, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter ();
-            if (bluetoothAdapter == null)
+            mRootView         = inflater.inflate(R.layout.fragment_bluetooth_connect, container, false);
+            mTextView = (TextView) mRootView.findViewById(R.id.section_label);
+            mListView = (ListView) mRootView.findViewById(R.id.section_list);
+            mProgressBar = (ProgressBar) mRootView.findViewById (R.id.progressBar);
+            mListView.setAdapter (new ArrayAdapter<String> (this.getActivity (),
+                                                            R.layout.rowitem,
+                                                            R.id.row_item_text));
+            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter ();
+            if (mBluetoothAdapter == null)
             {
                 Toast.makeText (this.getActivity ().getApplicationContext (), "Pas de Bluetooth",
                                 Toast.LENGTH_SHORT
                                ).show ();
-                textView.setText("No bluetooth device");
+                mTextView.setText("No bluetooth device");
             }
             else
             {
-                textView.setText(getString(R.string.section_format,
+                mTextView.setText(getString(R.string.section_format,
                                            mSectionNumber));
-                if (!bluetoothAdapter.isEnabled()) {
+                if (!mBluetoothAdapter.isEnabled()) {
                     Intent enableBlueTooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                     startActivityForResult(enableBlueTooth, REQUEST_CODE_ENABLE_BLUETOOTH);
                 }
+                else
+                {
+                    ((ArrayAdapter<String>)mListView.getAdapter ()).clear ();
+                    addBluetoothKnownDevices ();
+                    addBluetoothNewDevices ();
+                }
             }
 
-            return rootView;
+            return mRootView;
         }
 
         @Override
@@ -174,6 +210,64 @@ public class BluetoothConnect extends AppCompatActivity
                 return;
             if (resultCode == 0)
                 this.getActivity ().finish ();
+            else
+            {
+                ((ArrayAdapter<String>)mListView.getAdapter ()).clear ();
+                addBluetoothKnownDevices ();
+                addBluetoothNewDevices ();
+            }
+        }
+
+        private final BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
+            public void onReceive (Context context, Intent intent) {
+                String action = intent.getAction();
+                if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action))
+                {
+                    mProgressBar.setVisibility (View.VISIBLE);
+                }
+                if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action))
+                {
+                    mProgressBar.setVisibility (View.GONE);
+                }
+                else if (BluetoothDevice.ACTION_FOUND.equals(action))
+                {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    String item = device.getName () + " " + device.getAddress ();
+                    Log.v("BluetoothMonitor", "Adding new device item: " + item);
+                    ((ArrayAdapter<String>)mListView.getAdapter ()).add(item);
+                }
+            }
+        };
+
+        private
+        void addBluetoothNewDevices ()
+        {
+            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+            startActivity(discoverableIntent);
+            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+            getContext().registerReceiver(mBluetoothReceiver, filter);
+            mBluetoothAdapter.startDiscovery();
+        }
+
+        @Override
+        public
+        void onDestroy() {
+            super.onDestroy();
+            mBluetoothAdapter.cancelDiscovery();
+            getContext().unregisterReceiver(mBluetoothReceiver);
+        }
+
+        private
+        void addBluetoothKnownDevices()
+        {
+            devices = mBluetoothAdapter.getBondedDevices();
+            for (BluetoothDevice device : devices) {
+                String item = device.getName () + " " + device.getAddress ();
+                Log.v("BluetoothMonitor", "Adding known device item: " + item);
+                ((ArrayAdapter<String>)mListView.getAdapter ()).add(item);
+            }
+
         }
 
         @Override

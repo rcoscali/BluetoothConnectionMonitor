@@ -7,4 +7,7 @@
     <string name="action_settings">Settings</string>
     <string name="section_format">Bluetooth connection setup: step #%1$d</string>
     <string name="action_quit">Quit</string>
+    <string name="row_item_icon">Row item icon</string>
+    <string name="action_restart_scan">Restart devices scan</string>
+    <string name="action_stop_scan">Stop devices scan</string>
 </resources>
