@@ -14,7 +14,6 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:keepScreenOn="true"
-        android:text="@string/dummy_content"
         android:textColor="#33b5e5"
         android:textSize="50sp"
         android:textStyle="bold"/>
@@ -59,6 +58,14 @@
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:id="@+id/device_name"
             android:layout_gravity="center_horizontal|top"/>
+
+        <EditText
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:inputType="textMultiLine"
+            android:ems="10"
+            android:id="@+id/state_text"
+            android:background="#ffffff" />
     </FrameLayout>
 
 </FrameLayout>

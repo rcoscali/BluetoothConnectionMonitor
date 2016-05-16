@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
@@ -16,12 +17,14 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -30,11 +33,60 @@ import java.util.UUID;
 public
 class BluetoothClientServer extends AppCompatActivity
 {
-    private final static String MESSAGE_PING = "MessagePing";
-    private Handler mHandler = new Handler() {
+    // States of the Ping state machine
+    public static final int PING_STATE_INIT = 0;
+    public static final int PING_STATE_CONNECTING = 1;
+    public static final int PING_STATE_CONNECTED = 2;
+    public static final int PING_STATE_REQUESTED = 3;
+    public static final int PING_STATE_ACKNOWLEDGED = 4;
+    public static final int PING_STATE_FAILURE1 = 5;
+    public static final int PING_STATE_FAILURE2 = 6;
+    public static final int PING_STATE_FAILURE3 = 7;
+    public static final int PING_STATE_ALARM = 8;
+    public static final int PING_STATE_STOPPED = 9;
+    public static final int NR_PING_STATES = 10;
+
+    public int mCurPingState;
+
+    public static final String PING_STATE_NAMES[NR_PING_STATES] =
+    {
+        "Init",
+        "Connecting",
+        "Connected",
+        "Requested",
+        "Acknowledged",
+        "First Failure",
+        "Second Failure",
+        "Third Failure",
+        "ALARM !!!",
+        "Stopped"
+    }
+
+    private final static int MESSAGE_STATE_TRANSITION = 1;
+    private final static int MESSAGE_WARN = 2;
+
+    private Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage (Message msg) {
-            int ping = msg.getData().getInt(MESSAGE_PING);
+            switch (msg.what)
+            {
+                case MESSAGE_STATE_TRANSITION:
+                    int state_from = msg.arg1;
+                    int state_to = msg.arg2;
+                    if (mCurPingState == state_from)
+                    {
+                        mCurPingState = state_to;
+                        sendStateMessage(msg.getData().getString("reason"));
+                    }
+                    break;
+
+                case MESSAGE_WARN:
+                    sendStateMessage(msg.getData().getString("msg"));
+                    break;
+
+                default:
+                    sendStateMessage(String.format("Unexpected message received: %d\n", msg.what));
+            }
 
         }
     };
@@ -57,6 +109,7 @@ class BluetoothClientServer extends AppCompatActivity
     private static final int UI_ANIMATION_DELAY = 300;
     private final Handler  mHideHandler  = new Handler ();
     private View    mContentView;
+    private EditText mStateText;
     private final Runnable mHidePart2Runnable = new Runnable ()
     {
         @SuppressLint ("InlinedApi")
@@ -124,6 +177,7 @@ class BluetoothClientServer extends AppCompatActivity
     private BluetoothDevice mDevice;
     private AcceptThread mAcceptThread;
     private ConnectThread mConnectThread;
+    private int mMsgNr;
 
     @Override
     protected
@@ -153,6 +207,16 @@ class BluetoothClientServer extends AppCompatActivity
                 toggle ();
             }
         });
+        Intent intent = getIntent ();
+
+        mDevice = (BluetoothDevice)intent.getParcelableExtra ("device");
+
+        TextView deviceName = (TextView)findViewById(R.id.device_name);
+        deviceName.setText (mDevice.getName ());
+        mStateText = (EditText)findViewById(R.id.state_text);
+        mMsgNr = 0;
+        mCurPingState = PING_STATE_INIT;
+        sendStateMessage("Starting");
 
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
@@ -165,7 +229,8 @@ class BluetoothClientServer extends AppCompatActivity
             public
             void onClick (View v)
             {
-                mConnectThread = new ConnectThread ();
+                sendStateMessage("Starting ConnectThread");
+                mConnectThread = new ConnectThread (mDevice);
                 mConnectThread.start();
             }
         });
@@ -175,16 +240,18 @@ class BluetoothClientServer extends AppCompatActivity
             public
             void onClick (View v)
             {
+                sendStateMessage("Starting AcceptThread");
                 mAcceptThread = new AcceptThread ();
                 mAcceptThread.start();
             }
         });
 
-        Intent intent = getIntent ();
-        mDevice = (BluetoothDevice)intent.getParcelableExtra ("device");
+    }
 
-        TextView deviceName = (TextView)findViewById(R.id.device_name);
-        deviceName.setText (mDevice.getName ());
+    private void sendStateMessage(String str)
+    {
+        String msg = String.format("[%d] <%s> %s\n", mMsgNr, PING_STATE_NAMES[mCurPingState], str);
+        mStateText.append(msg);
     }
 
     @Override
@@ -272,6 +339,7 @@ class BluetoothClientServer extends AppCompatActivity
     private final static UUID MY_UUID = UUID.fromString ("86706344-b90c-478e-aa84-ec67f9631031");
 
     public class AcceptThread extends Thread {
+        private final PingThread mmPingThread;
         private final BluetoothServerSocket mmServerSocket;
 
         public AcceptThread() {
@@ -283,17 +351,38 @@ class BluetoothClientServer extends AppCompatActivity
         }
 
         public void run() {
+            // Warn UI thread
+            Message msg = mHandler.obtainMessage(MESSAGE_WARN);
+            msg.setData(new Bundle().putString("msg", "Accept Thread Started"));
+            msg.sendToTarget();
+
+            // Start real work
             BluetoothSocket socket = null;
-            while (true) {
-                try {
+            while (true)
+            {
+                try
+                {
+                    msg = mHandler.obtainMessage(MESSAGE_WARN);
+                    msg.setData(new Bundle().putString("msg", "Accept Thread: Accepting data ..."));
+                    msg.sendToTarget();
                     socket = mmServerSocket.accept();
-                } catch (IOException e) {
+                    msg = mHandler.obtainMessage(MESSAGE_WARN);
+                    msg.setData(new Bundle().putString("msg", "Accept Thread: Data received ..."));
+                    msg.sendToTarget();
+                }
+                catch (IOException e)
+                {
+                    msg = mHandler.obtainMessage(MESSAGE_WARN);
+                    msg.setData(new Bundle().putString("msg", "Accept Thread: I/O exception occured ..."));
+                    msg.sendToTarget();
                     break;
                 }
 
                 if (socket != null) {
                     ConnectedThread connectedThread = new ConnectedThread (socket);
                     connectedThread.start();
+                    mmPingThread = new PingThread(connectedThread);
+                    mmPingThread.start();
                     break;
                 }
             }
@@ -320,12 +409,29 @@ class BluetoothClientServer extends AppCompatActivity
         }
 
         public void run() {
+            // Warn UI thread
+            Message msg = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
+            msg.arg1 = mCurPingState;
+            msg.arg2 = PING_STATE_CONNECTING;
+            msg.setData(new Bundle().putString("raeson", "Connect Thread Started"));
+            msg.sendToTarget();
+
+            // Start real work
             BluetoothAdapter.getDefaultAdapter ().cancelDiscovery();
             try {
+                msg = mHandler.obtainMessage(MESSAGE_WARN);
+                msg.setData(new Bundle().putString("msg", "Connect Thread: connecting"));
+                msg.sendToTarget();
+                mmSocket.connect();
+                msg.setData(new Bundle().putString("msg", "Connect Thread: connection succeed"));
+                msg.sendToTarget();
                 mmSocket.connect();
             } catch (IOException connectException) {
                 try {
                     mmSocket.close();
+                    msg = mHandler.obtainMessage(MESSAGE_WARN);
+                    msg.setData(new Bundle().putString("msg", "Connect Thread: I/O exception occured"));
+                    msg.sendToTarget();
                 }
                 catch (IOException closeException) { }
                 return;
@@ -366,17 +472,58 @@ class BluetoothClientServer extends AppCompatActivity
         }
 
         public void run() {
+            // Warn UI thread
+            Message msg = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
+            msg.arg1 = mCurPingState;
+            msg.arg2 = PING_STATE_CONNECTED;
+            msg.setData(new Bundle().putString("raeson", "Connected Thread Started"));
+            msg.sendToTarget();
+
             byte[] buffer = new byte[1024];  // buffer store for the stream
             int bytes; // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs
             while (true) {
                 try {
+                    msg = mHandler.obtainMessage(MESSAGE_WARN);
+                    msg.setData(new Bundle().putString("msg", "Connected Thread: reading data ..."));
+                    msg.sendToTarget();
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
-                    // Send the obtained bytes to the UI activity
-                    mHandler.obtainMessage(MESSAGE_PING, bytes, -1, buffer)
-                            .sendToTarget();
+
+                    // Check data are the ones expected
+                    if (buffer.equals(mSentBuffer) && mSentBuffer.length == bytes) {
+                        msg = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
+                        msg.arg1 = mCurPingState;
+                        msg.arg2 = PING_STATE_ACKNOWLEDGED;
+                        msg.setData(new Bundle().putString("reason", "Connected Thread: reading data ..."));
+                        msg.sendToTarget();
+                    }
+                    else
+                    {
+                        msg = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
+                        msg.arg1 = mCurPingState;
+                        switch (mCurPingState)
+                        {
+                            case PING_STATE_REQUESTED:
+                                msg.arg2 = PING_STATE_FAILURE1;
+                                break;
+                            case PING_STATE_FAILURE1:
+                                msg.arg2 = PING_STATE_FAILURE2;
+                                break;
+                            case PING_STATE_FAILURE2:
+                                msg.arg2 = PING_STATE_FAILURE3;
+                                break;
+                            case PING_STATE_FAILURE3:
+                                msg.arg2 = PING_STATE_ALARM;
+                                break;
+                            default:
+                                msg.arg2 = PING_STATE_ALARM;
+                                break;
+                        }
+                        msg.setData(new Bundle().putString("reason", "Connected Thread: Unexpected data read ..."));
+                        msg.sendToTarget();
+                    }
                 } catch (IOException e) {
                     break;
                 }
@@ -384,17 +531,36 @@ class BluetoothClientServer extends AppCompatActivity
         }
 
         /* Call this from the main activity to send data to the remote device */
-        public void write(byte[] bytes) {
+        public void write(byte[] bytes)
+        {
             try {
                 mmOutStream.write(bytes);
             } catch (IOException e) { }
         }
 
         /* Call this from the main activity to shutdown the connection */
-        public void cancel() {
+        public void cancel()
+        {
             try {
                 mmSocket.close();
             } catch (IOException e) { }
+        }
+    }
+
+    private class PingThread extends Thread
+    {
+        private final ConnectedThread mmConnectedThread;
+
+        public PingThread(ConnectedThread connectedThread)
+        {
+            mmConnectedThread = connectedThread;
+        }
+
+        public void run()
+        {
+            Message msg = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
+            msg.arg1 = mCurPingState;
+            msg.arg2 = PING_STATE_REQUESTED
         }
     }
 }
