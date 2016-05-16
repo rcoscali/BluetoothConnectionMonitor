@@ -64,6 +64,7 @@ class BluetoothClientServer extends AppCompatActivity
 
     private final static int MESSAGE_STATE_TRANSITION = 1;
     private final static int MESSAGE_WARN = 2;
+    private final static int MESSAGE_ERROR = 3;
 
     private Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -82,6 +83,14 @@ class BluetoothClientServer extends AppCompatActivity
 
                 case MESSAGE_WARN:
                     sendStateMessage(msg.getData().getString("msg"));
+                    break;
+
+                case MESSAGE_ERROR:
+                    sendStateMessage(msg.getData().getString("msg"));
+                    mConnectThread.interrupt();
+                    mConnectThread.join(200);
+                    mAcceptThread.interrupt();
+                    mAcceptThread.join(200);
                     break;
 
                 default:
@@ -375,14 +384,6 @@ class BluetoothClientServer extends AppCompatActivity
                     msg = mHandler.obtainMessage(MESSAGE_WARN);
                     msg.setData(new Bundle().putString("msg", "Accept Thread: I/O exception occured ..."));
                     msg.sendToTarget();
-                    break;
-                }
-
-                if (socket != null) {
-                    ConnectedThread connectedThread = new ConnectedThread (socket);
-                    connectedThread.start();
-                    mmPingThread = new PingThread(connectedThread);
-                    mmPingThread.start();
                     break;
                 }
             }
