@@ -279,6 +279,7 @@ public class BluetoothConnect extends AppCompatActivity
         private
         void addBluetoothKnownDevices()
         {
+            mListView.removeAllViews();
             mDeviceList = new ArrayList<> ();
             Set<BluetoothDevice> deviceList = mBluetoothAdapter.getBondedDevices ();
             for (BluetoothDevice device : deviceList) {
