@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BluetoothConnectionMonitor</string>
+    <string name="action_launch_server">Lancer Le Serveur</string>
+    <string name="action_quit">Quitter</string>
+    <string name="action_restart_scan">Relancer La Découverte</string>
+    <string name="action_settings">Paramètres</string>
+    <string name="action_stop_scan">Arrêter La Découverte</string>
+    <string name="client_button">Lancer Le Client</string>
+    <string name="connection_lost">ALERTE: Connexion Perdue !!!</string>
+    <string name="dismiss_button">Rejeter</string>
+    <string name="pref_default_display_name">Marcel Dupont</string>
+    <string name="pref_description_social_recommendations">Recommandations de personnes à contacter         basées sur l\'historique de vos messages</string>
+    <string name="pref_header_data_sync"><![CDATA[Données & Synchronisation]]></string>
+    <string name="pref_header_general">Généraux</string>
+    <string name="pref_header_notifications">Notifications</string>
+    <string name="pref_ringtone_silent">Silence</string>
+    <string name="pref_title_add_friends_to_messages">Ajouter des Amis aux Messages</string>
+    <string name="pref_title_display_name">Nom Affiché</string>
+    <string name="pref_title_new_message_notifications">Notifications de Nouveau Message</string>
+    <string name="pref_title_ringtone">Sonnerie</string>
+    <string name="pref_title_social_recommendations">Activer Recommandations Sociales</string>
+    <string name="pref_title_sync_frequency">Fréquence De Synchronisation</string>
+    <string name="pref_title_system_sync_settings">Paramètres de Synchronisation Système</string>
+    <string name="pref_title_vibrate">Vibreur</string>
+    <string name="row_item_icon"></string>
+    <string name="section_format">Mise en Place de la Connexion Bluetooth: étape #%1$d</string>
+    <string name="server_button">Lancement du Serveur</string>
+    <string name="title_activity_bluetooth_monitor_settings">Paramètres</string>
+    <string name="action_display_infos">Informations sur le Périphérique</string>
+    <string name="action_launch_client">Surveiller Ce Périphérique</string>
+</resources>

@@ -1,5 +1,6 @@
 package monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
@@ -26,6 +27,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Main activity of this bluetooth connection monitoring application
+ * It displays available bluetooth devices and allow the user to
+ * launch a ping client for a selected device.
+ * It also allows to launch a ping server.
+ */
 public class BluetoothConnect extends AppCompatActivity
 {
     private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 0;
@@ -60,22 +67,16 @@ public class BluetoothConnect extends AppCompatActivity
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(
-//                new View.OnClickListener()
-//                {
-//                    @Override
-//                    public void onClick(View view)
-//                    {
-//                        Snackbar.make(view,
-//                                      "Stop scan",
-//                                      Snackbar.LENGTH_LONG).setAction("ActionStopScan", null).show();
-//                    }
-//                }
-//        );
     }
 
+    /**
+     * Callback called when a started activity return a result
+     * If bluetooth device not available, finish the main activity
+     *
+     * @param requestCode The request code used fat activity start
+     * @param resultCode The result returned by the activity
+     * @param data The intent used for activity launch
+     */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -85,6 +86,12 @@ public class BluetoothConnect extends AppCompatActivity
             finish();
     }
 
+    /**
+     * Callback called for creation of the menu bar menu items
+     *
+     * @param menu The menu to be populated
+     * @return true
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
@@ -93,38 +100,44 @@ public class BluetoothConnect extends AppCompatActivity
         return true;
     }
 
+    /**
+     * Callback called when a menu bar option item is selected
+     *
+     * @param item The menu bar menu item selected
+     * @return true if handled
+     * @return Superclass method result if not handled
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        switch (item.getItemId())
+        {
+            case R.id.action_settings:
+                {
+                    Intent intent = new Intent(getApplicationContext (), BluetoothMonitorSettings.class);
+                    startActivity(intent);
+                }
+                break;
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings)
-        {
-            Intent intent = new Intent(BluetoothMonitorSettings.class);
-            startActivity(intent);
-            return true;
-        }
-        else if (id == R.id.action_restart_scan)
-        {
-            BluetoothAdapter.getDefaultAdapter ().startDiscovery ();
-            return true;
-        }
-        else if (id == R.id.action_stop_scan)
-        {
-            BluetoothAdapter.getDefaultAdapter ().cancelDiscovery ();
-            return true;
-        }
-        else if (id == R.id.action_quit)
-        {
-            finish();
-            return true;
-        }
+            case R.id.action_restart_scan:
+                BluetoothAdapter.getDefaultAdapter ().startDiscovery ();
+                break;
 
-        return super.onOptionsItemSelected(item);
+            case R.id.action_stop_scan:
+                BluetoothAdapter.getDefaultAdapter ().cancelDiscovery ();
+                break;
+
+            case R.id.action_quit:
+                finish();
+                break;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
     }
 
     /**
@@ -137,6 +150,11 @@ public class BluetoothConnect extends AppCompatActivity
          * fragment.
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
+
+        /**
+         * Request code used for Bluetooth device activation
+         * Requires BLUETOOTH_ADMIN permission
+         */
         private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 0;
 
         private int                   mSectionNumber;
@@ -154,6 +172,10 @@ public class BluetoothConnect extends AppCompatActivity
         /**
          * Returns a new instance of this fragment for the given section
          * number.
+         *
+         * @param sectionNumber page number to instanciate
+         *
+         * @return Newly instanciated fragment
          */
         public static PlaceholderFragment newInstance(int sectionNumber)
         {
@@ -164,20 +186,41 @@ public class BluetoothConnect extends AppCompatActivity
             return fragment;
         }
 
+        /**
+         * Create the view for this fragment
+         *
+         * @param inflater The inflater used for parsing the layout resource
+         * @param container The container in which this view is embedded
+         * @param savedInstanceState A bundle for the saved state
+         * @return
+         */
         @Override
         public View onCreateView(LayoutInflater inflater,
                                  ViewGroup container,
                                  Bundle savedInstanceState)
         {
             mSectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
-            Log.v("BluetoothMonitor",
-                  "Fragment - onCreateView: " + getString(R.string.section_format, mSectionNumber));
             mRootView         = inflater.inflate(R.layout.fragment_bluetooth_connect, container, false);
             mTextView = (TextView) mRootView.findViewById(R.id.section_label);
             mListView = (ListView) mRootView.findViewById(R.id.section_list);
             mProgressBar = (ProgressBar) mRootView.findViewById (R.id.progressBar);
             mArrayAdapter = new DeviceArrayAdapter (this.getActivity ());
             mListView.setAdapter (mArrayAdapter);
+//            mListView.setOnItemLongClickListener (new AdapterView.OnItemLongClickListener ()
+//            {
+//                @Override
+//                public
+//                boolean onItemLongClick (AdapterView<?> parent, View view, int position, long id)
+//                {
+//                    BluetoothDevice device = mArrayAdapter.getItem (position);
+//                    Log.v("BluetoothMonitor",
+//                            "Device long selected: " + device.getName ());
+//                    Intent intent = new Intent (getActivity ().getApplicationContext (), BluetoothClientServer.class);
+//                    intent.putExtra("device", device);
+//                    startActivity (intent);
+//                    return true;
+//                }
+//            });
             mListView.setOnItemClickListener (new AdapterView.OnItemClickListener ()
             {
                 @Override
@@ -186,7 +229,7 @@ public class BluetoothConnect extends AppCompatActivity
                 {
                     BluetoothDevice device = mArrayAdapter.getItem (position);
                     Log.v("BluetoothMonitor",
-                          "Device selected: " + device.getName ());
+                            "Device selected: " + device.getName ());
                     Intent intent = new Intent (getActivity ().getApplicationContext (), BluetoothClientServer.class);
                     intent.putExtra("device", device);
                     startActivity (intent);
@@ -296,8 +339,10 @@ public class BluetoothConnect extends AppCompatActivity
     }
 
     public static class DeviceArrayAdapter extends BaseAdapter {
-        private final Context mContext;
+        private final Activity              mActivity;
+        private final Context               mContext;
         private final List<BluetoothDevice> mDevices;
+        private final MenuInflater          mMenuInflater;
 
         public static class ViewHolder {
             // I added a generic return type to reduce the casting noise in client code
@@ -319,13 +364,16 @@ public class BluetoothConnect extends AppCompatActivity
 
         public DeviceArrayAdapter (Context context) {
             mContext = context;
+            mActivity = (Activity)context;
+            mMenuInflater = mActivity.getMenuInflater();
             mDevices = new ArrayList<>();
+
             notifyDataSetChanged();
         }
 
         public DeviceArrayAdapter (Context context, BluetoothDevice[] devices) {
-            mContext = context;
-            mDevices = new ArrayList<>();
+            this(context);
+
             for (BluetoothDevice device: devices)
             {
                 mDevices.add(device);
@@ -368,6 +416,16 @@ public class BluetoothConnect extends AppCompatActivity
         }
 
         @Override
+        public boolean isEnabled(int position) {
+            return true;
+        }
+
+        @Override
+        public boolean areAllItemsEnabled() {
+            return true;
+        }
+
+        @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
             if (convertView == null) {
@@ -397,6 +455,14 @@ public class BluetoothConnect extends AppCompatActivity
             else if (device.getBluetoothClass().hasService(BluetoothClass.Service.TELEPHONY))
                 imgView.setImageResource(R.drawable.bluetooth_class_telephony);
 
+            convertView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+                @Override
+                public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                    mMenuInflater.inflate(R.menu.device_menu, menu);
+                }
+            });
+
+            mActivity.registerForContextMenu(convertView);
             return convertView;
         }
     }
