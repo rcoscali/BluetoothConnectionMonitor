@@ -1,6 +1,7 @@
 package monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -16,10 +17,12 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.*;
 import android.widget.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -58,22 +61,19 @@ public class BluetoothConnect extends AppCompatActivity
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(
-                new View.OnClickListener()
-                {
-                    @Override
-                    public void onClick(View view)
-                    {
-                        Snackbar.make(view,
-                                      "Restart scan",
-                                      Snackbar.LENGTH_LONG).setAction("ActionRestartScan", null).show();
-                        Snackbar.make(view,
-                                      "Stop scan",
-                                      Snackbar.LENGTH_LONG).setAction("ActionStopScan", null).show();
-                    }
-                }
-        );
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(
+//                new View.OnClickListener()
+//                {
+//                    @Override
+//                    public void onClick(View view)
+//                    {
+//                        Snackbar.make(view,
+//                                      "Stop scan",
+//                                      Snackbar.LENGTH_LONG).setAction("ActionStopScan", null).show();
+//                    }
+//                }
+//        );
     }
 
     @Override
@@ -104,6 +104,8 @@ public class BluetoothConnect extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings)
         {
+            Intent intent = new Intent(BluetoothMonitorSettings.class);
+            startActivity(intent);
             return true;
         }
         else if (id == R.id.action_restart_scan)
@@ -143,7 +145,7 @@ public class BluetoothConnect extends AppCompatActivity
         private ListView              mListView;
         private ProgressBar           mProgressBar;
         private BluetoothAdapter      mBluetoothAdapter;
-        private List<BluetoothDevice> mDeviceList;
+        private DeviceArrayAdapter    mArrayAdapter;
 
         public PlaceholderFragment()
         {
@@ -174,16 +176,15 @@ public class BluetoothConnect extends AppCompatActivity
             mTextView = (TextView) mRootView.findViewById(R.id.section_label);
             mListView = (ListView) mRootView.findViewById(R.id.section_list);
             mProgressBar = (ProgressBar) mRootView.findViewById (R.id.progressBar);
-            mListView.setAdapter (new ArrayAdapter<String> (this.getActivity (),
-                                                            R.layout.rowitem,
-                                                            R.id.row_item_text));
+            mArrayAdapter = new DeviceArrayAdapter (this.getActivity ());
+            mListView.setAdapter (mArrayAdapter);
             mListView.setOnItemClickListener (new AdapterView.OnItemClickListener ()
             {
                 @Override
                 public
                 void onItemClick (AdapterView<?> parent, View view, int position, long id)
                 {
-                    BluetoothDevice device = mDeviceList.get (position);
+                    BluetoothDevice device = mArrayAdapter.getItem (position);
                     Log.v("BluetoothMonitor",
                           "Device selected: " + device.getName ());
                     Intent intent = new Intent (getActivity ().getApplicationContext (), BluetoothClientServer.class);
@@ -209,7 +210,7 @@ public class BluetoothConnect extends AppCompatActivity
                 }
                 else
                 {
-                    ((ArrayAdapter<String>)mListView.getAdapter ()).clear ();
+                    ((DeviceArrayAdapter)mListView.getAdapter ()).clear ();
                     addBluetoothKnownDevices ();
                     addBluetoothNewDevices ();
                 }
@@ -227,7 +228,7 @@ public class BluetoothConnect extends AppCompatActivity
                 this.getActivity ().finish ();
             else
             {
-                ((ArrayAdapter<String>)mListView.getAdapter ()).clear ();
+                ((DeviceArrayAdapter)mListView.getAdapter ()).clear ();
                 addBluetoothKnownDevices ();
                 addBluetoothNewDevices ();
             }
@@ -246,11 +247,7 @@ public class BluetoothConnect extends AppCompatActivity
                 }
                 else if (BluetoothDevice.ACTION_FOUND.equals(action))
                 {
-                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    mDeviceList.add (device);
-                    String item = device.getName () + " " + device.getAddress ();
-                    Log.v("BluetoothMonitor", "Adding new device item: " + item);
-                    ((ArrayAdapter<String>)mListView.getAdapter ()).add(item);
+                    mArrayAdapter.add ((BluetoothDevice) intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE));
                 }
             }
         };
@@ -279,15 +276,8 @@ public class BluetoothConnect extends AppCompatActivity
         private
         void addBluetoothKnownDevices()
         {
-            mListView.removeAllViews();
-            mDeviceList = new ArrayList<> ();
-            Set<BluetoothDevice> deviceList = mBluetoothAdapter.getBondedDevices ();
-            for (BluetoothDevice device : deviceList) {
-                mDeviceList.add (device);
-                String item = device.getName () + " " + device.getAddress ();
-                Log.v("BluetoothMonitor", "Adding known device item: " + item);
-                ((ArrayAdapter<String>)mListView.getAdapter ()).add(item);
-            }
+            mArrayAdapter.clear();
+            mArrayAdapter.addAll (mBluetoothAdapter.getBondedDevices ());
         }
 
         @Override
@@ -302,6 +292,112 @@ public class BluetoothConnect extends AppCompatActivity
         {
             super.onResume();
             Log.v("BluetoothMonitor", "Fragment - onResume: section number #" + mSectionNumber);
+        }
+    }
+
+    public static class DeviceArrayAdapter extends BaseAdapter {
+        private final Context mContext;
+        private final List<BluetoothDevice> mDevices;
+
+        public static class ViewHolder {
+            // I added a generic return type to reduce the casting noise in client code
+            @SuppressWarnings("unchecked")
+            public static <T extends View> T get(View view, int id) {
+                SparseArray<View> viewHolder = (SparseArray<View>) view.getTag();
+                if (viewHolder == null) {
+                    viewHolder = new SparseArray<View>();
+                    view.setTag(viewHolder);
+                }
+                View childView = viewHolder.get(id);
+                if (childView == null) {
+                    childView = view.findViewById(id);
+                    viewHolder.put(id, childView);
+                }
+                return (T) childView;
+            }
+        }
+
+        public DeviceArrayAdapter (Context context) {
+            mContext = context;
+            mDevices = new ArrayList<>();
+            notifyDataSetChanged();
+        }
+
+        public DeviceArrayAdapter (Context context, BluetoothDevice[] devices) {
+            mContext = context;
+            mDevices = new ArrayList<>();
+            for (BluetoothDevice device: devices)
+            {
+                mDevices.add(device);
+            }
+            notifyDataSetChanged();
+        }
+
+        public void add (BluetoothDevice device)
+        {
+            mDevices.add(device);
+            notifyDataSetChanged();
+        }
+
+        public void addAll(Collection<? extends BluetoothDevice> devices)
+        {
+            mDevices.addAll(devices);
+            notifyDataSetChanged();
+        }
+
+        public void clear()
+        {
+            mDevices.clear();
+            notifyDataSetChanged();
+        }
+
+        public int getCount() {
+            return mDevices.size();
+        }
+
+        // getItem(int) in Adapter returns Object but we can override
+        // it to BananaPhone thanks to Java return type covariance
+        @Override
+        public BluetoothDevice getItem(int position) {
+            return mDevices.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return mDevices.get(position).hashCode();
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            if (convertView == null) {
+                convertView = LayoutInflater.from(mContext)
+                        .inflate(R.layout.rowitem, parent, false);
+            }
+
+            ImageView imgView = ViewHolder.get(convertView, R.id.row_item_icon);
+            TextView nameView = ViewHolder.get(convertView, R.id.row_item_text);
+            TextView addrView = ViewHolder.get(convertView, R.id.row_item_address);
+
+            BluetoothDevice device = getItem(position);
+            nameView.setText(device.getName());
+            addrView.setText(device.getAddress());
+            if (device.getBluetoothClass().hasService(BluetoothClass.Service.AUDIO))
+                imgView.setImageResource(R.drawable.bluetooth_class_audio);
+            else if (device.getBluetoothClass().hasService(BluetoothClass.Service.CAPTURE))
+                imgView.setImageResource(R.drawable.bluetooth_class_capture);
+            else if (device.getBluetoothClass().hasService(BluetoothClass.Service.NETWORKING))
+                imgView.setImageResource(R.drawable.bluetooth_class_networking);
+            else if (device.getBluetoothClass().hasService(BluetoothClass.Service.OBJECT_TRANSFER))
+                imgView.setImageResource(R.drawable.bluetooth_class_object_transfer);
+            else if (device.getBluetoothClass().hasService(BluetoothClass.Service.POSITIONING))
+                imgView.setImageResource(R.drawable.bluetooth_class_positioning);
+            else if (device.getBluetoothClass().hasService(BluetoothClass.Service.RENDER))
+                imgView.setImageResource(R.drawable.bluetooth_class_render);
+            else if (device.getBluetoothClass().hasService(BluetoothClass.Service.TELEPHONY))
+                imgView.setImageResource(R.drawable.bluetooth_class_telephony);
+
+            return convertView;
         }
     }
 
