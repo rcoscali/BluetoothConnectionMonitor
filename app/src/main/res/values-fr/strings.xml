@@ -35,7 +35,7 @@
     <string name="title_activity_bluetooth_connect">Connection Par Bluetooth</string>
     <string name="launching_server">Lancement du serveur de Ping …</string>
     <string name="launching_client">Lancement du client de Ping …</string>
-    <string name="unexpected_msg_received">Message inconnu reçu: %d\\n</string>
+    <string name="unexpected_msg_received">Message inconnu reçu: %1$d\\n</string>
     <string name="accept_thread_started">Tâche d\'écoute démarrée</string>
     <string name="accept_thread_accepting_data">Tâche d\'écoute en attente de données …</string>
     <string name="accept_thread_data_received">Tâche d\'écoute: données reçues</string>
@@ -52,7 +52,7 @@
     <string name="starting" >Démarrage de l\'Activité Client/Serveur Bluetooth</string>
     <string name="alarm_image">Alarm image</string>
     <string name="no_bluetooth_device">Pas de périphérique Bluetooth</string>
-    <string name="bytes_of_data_sent">%d octets de données envoyées: \'%s\'</string>
-    <string name="bytes_of_data_received">%d octets de données reçues: \'%s\'</string>
-    <string name="state_message_format"><![CDATA[[%d] <%s> %s\\n]]></string>
+    <string name="bytes_of_data_sent">%1$d octets de données envoyées: \'%2$s\'</string>
+    <string name="bytes_of_data_received">%1$d octets de données reçues: \'%2$s\'</string>
+    <string name="state_message_format"><![CDATA[[%1$d] <%2$s> %3$s\\n]]></string>
 </resources>

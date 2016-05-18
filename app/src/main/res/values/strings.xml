@@ -21,7 +21,7 @@
     <string name="pref_header_general">General</string>
 
     <!-- Example settings for Data & Sync -->
-    <string name="pref_header_data_sync">Data &amp; sync</string>
+    <string name="pref_header_data_sync"><![CDATA[Data & Sync]]></string>
 
     <string name="pref_title_ping_frequency">Ping Frequency</string>
     <string-array name="pref_ping_frequency_titles">
@@ -85,7 +85,7 @@
     <string name="action_launch_client">Ping this Device</string>
     <string name="launching_server">Launching Ping Server …</string>
     <string name="launching_client">Launching Ping Client …</string>
-    <string name="unexpected_msg_received">Unexpected message received: %d\\n</string>
+    <string name="unexpected_msg_received">Unexpected message received: %1$d\\n</string>
     <string name="accept_thread_started">Accept Thread Started</string>
     <string name="accept_thread_accepting_data">Accept Thread accepting data …</string>
     <string name="accept_thread_data_received">Accept Thread: data received</string>
@@ -102,7 +102,7 @@
     <string name="starting" >Bluetooth Client/Server Activity starting …</string>
     <string name="alarm_image">Alarm image</string>
     <string name="no_bluetooth_device">No bluetooth device</string>
-    <string name="bytes_of_data_sent">%d bytes of data sent: \'%s\'</string>
-    <string name="bytes_of_data_received">%d bytes of data received: \'%s\'</string>
-    <string name="state_message_format"><![CDATA[[%d] <%s> %s\\n]]></string>
+    <string name="bytes_of_data_sent">%1$d bytes of data sent: \'%2$s\'</string>
+    <string name="bytes_of_data_received">%1$d bytes of data received: \'%2$s\'</string>
+    <string name="state_message_format"><![CDATA[[%1$d] <%2$s> %3$s\\n]]></string>
 </resources>
