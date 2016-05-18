@@ -1,4 +1,4 @@
-package monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor;
+package com.rcsnet.bluetoothmonitor;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

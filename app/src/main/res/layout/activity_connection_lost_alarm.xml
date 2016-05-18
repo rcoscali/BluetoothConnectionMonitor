@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#47cc00"
-    tools:context="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor.ConnectionLostAlarm">
+    tools:context="com.rcsnet.bluetoothmonitor.ConnectionLostAlarm">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
@@ -14,7 +14,6 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:keepScreenOn="true"
-        android:text="@string/dummy_content"
         android:textColor="#3342e5"
         android:textSize="50sp"
         android:textStyle="bold" />
@@ -43,8 +42,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/dismiss_button"
-                android:onClick="onDismissButtonClicked" />
+                android:text="@string/dismiss_button"/>
 
         </LinearLayout>
 
@@ -53,7 +51,7 @@
             android:layout_height="181dp"
             android:id="@+id/imageView"
             android:layout_gravity="center"
-            android:contentDescription="Alarm image"
+            android:contentDescription="@string/alarm_image"
             android:src="@android:drawable/ic_dialog_alert" />
 
         <TextView
@@ -66,7 +64,7 @@
             android:textColor="#fff200"
             android:textStyle="bold"
             android:typeface="sans"
-            android:textSize="60px" />
+            android:textSize="60sp" />
     </FrameLayout>
 
 </FrameLayout>

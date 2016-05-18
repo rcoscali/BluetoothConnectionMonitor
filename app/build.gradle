@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.3"
 
     defaultConfig {
-        applicationId "monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor"
+        applicationId "monitor.com.rcsnet.bluetoothmonitor.rcsnet.com.bluetoothconnectionmonitor"
         minSdkVersion 18
         targetSdkVersion 23
         versionCode 1

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">BluetoothConnectionMonitor</string>
+    <string name="app_name">Surveillant de Connexion Bluetooth</string>
     <string name="action_launch_server">Lancer Le Serveur</string>
     <string name="action_quit">Quitter</string>
     <string name="action_restart_scan">Relancer La Découverte</string>
     <string name="action_settings">Paramètres</string>
     <string name="action_stop_scan">Arrêter La Découverte</string>
-    <string name="client_button">Lancer Le Client</string>
+    <string name="client_button">Surveiller ce Périphérique</string>
     <string name="connection_lost">ALERTE: Connexion Perdue !!!</string>
     <string name="dismiss_button">Rejeter</string>
     <string name="pref_default_display_name">Marcel Dupont</string>
@@ -20,13 +20,39 @@
     <string name="pref_title_new_message_notifications">Notifications de Nouveau Message</string>
     <string name="pref_title_ringtone">Sonnerie</string>
     <string name="pref_title_social_recommendations">Activer Recommandations Sociales</string>
-    <string name="pref_title_sync_frequency">Fréquence De Synchronisation</string>
+    <string name="pref_title_ping_frequency">Fréquence du Ping</string>
+    <string name="pref_title_ping_timeout">Période de Temporisation du Ping</string>
+    <string name="pref_title_ping_failure_number">Nombre d\'échecs avant Alarme</string>
     <string name="pref_title_system_sync_settings">Paramètres de Synchronisation Système</string>
     <string name="pref_title_vibrate">Vibreur</string>
-    <string name="row_item_icon"></string>
+    <string name="row_item_icon">Icône de la ligne d\'un élément</string>
     <string name="section_format">Mise en Place de la Connexion Bluetooth: étape #%1$d</string>
     <string name="server_button">Lancement du Serveur</string>
     <string name="title_activity_bluetooth_monitor_settings">Paramètres</string>
     <string name="action_display_infos">Informations sur le Périphérique</string>
     <string name="action_launch_client">Surveiller Ce Périphérique</string>
+    <string name="title_activity_bluetooth_client_server">Client Serveur Bluetooth</string>
+    <string name="title_activity_bluetooth_connect">Connection Par Bluetooth</string>
+    <string name="launching_server">Lancement du serveur de Ping …</string>
+    <string name="launching_client">Lancement du client de Ping …</string>
+    <string name="unexpected_msg_received">Message inconnu reçu: %d\\n</string>
+    <string name="accept_thread_started">Tâche d\'écoute démarrée</string>
+    <string name="accept_thread_accepting_data">Tâche d\'écoute en attente de données …</string>
+    <string name="accept_thread_data_received">Tâche d\'écoute: données reçues</string>
+    <string name="accept_thread_io_exception">Tâche d\'écoute: Erreur d\'entrées/sorties</string>
+    <string name="connect_thread_started" >Tâche de connexion démarrée</string>
+    <string name="connect_thread_connecting" >Tâche de connexion: en cours …</string>
+    <string name="connect_thread_connection_succeed" >Succés de la Tâche de connexion</string>
+    <string name="connect_thread_io_exception" >Tâche de connexion: Erreur d\'entrées/sorties</string>
+    <string name="connected_thread_started" >Tâche de réception démarrée</string>
+    <string name="connected_thread_data_acknowledge" >Tâche de réception: Réponse au Ping Acquitée</string>
+    <string name="connected_thread_invalid_data_received" >Tâche de réception: Données Reçues Invalides</string>
+    <string name="connected_thread_io_exception" >Tâche de réception: Erreur d\'Entrées/Sorties</string>
+    <string name="ping_thread_send_request" >Tâche d\'Initiation du Ping: Envoie de la Requète</string>
+    <string name="starting" >Démarrage de l\'Activité Client/Serveur Bluetooth</string>
+    <string name="alarm_image">Alarm image</string>
+    <string name="no_bluetooth_device">Pas de périphérique Bluetooth</string>
+    <string name="bytes_of_data_sent">%d octets de données envoyées: \'%s\'</string>
+    <string name="bytes_of_data_received">%d octets de données reçues: \'%s\'</string>
+    <string name="state_message_format"><![CDATA[[%d] <%s> %s\\n]]></string>
 </resources>

@@ -3,7 +3,7 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              android:background="#0099cc"
-             tools:context="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor.BluetoothClientServer">
+             tools:context="com.rcsnet.bluetoothmonitor.BluetoothClientServer">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
@@ -36,14 +36,6 @@
             tools:ignore="UselessParent">
 
             <Button
-                android:id="@+id/server_button"
-                style="?metaButtonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/server_button"/>
-
-            <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/client_button"
@@ -65,7 +57,14 @@
             android:inputType="textMultiLine"
             android:ems="10"
             android:id="@+id/state_text"
-            android:background="#ffffff" />
+            android:textStyle="normal"
+            android:textSize="12sp"
+            android:typeface="monospace"
+            android:theme="@android:style/Widget.DeviceDefault.EditText"
+            android:enabled="false"
+            android:editable="false"
+            style="@style/AppTheme"
+            android:clickable="false" />
     </FrameLayout>
 
 </FrameLayout>

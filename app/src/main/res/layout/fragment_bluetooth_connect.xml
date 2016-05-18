@@ -6,7 +6,7 @@
               android:paddingLeft="16dp"
               android:paddingRight="16dp"
               android:paddingTop="@dimen/activity_vertical_margin"
-              tools:context="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor.BluetoothConnect$PlaceholderFragment"
+              tools:context="com.rcsnet.bluetoothmonitor.BluetoothConnect$PlaceholderFragment"
               android:orientation="vertical">
 
     <TextView

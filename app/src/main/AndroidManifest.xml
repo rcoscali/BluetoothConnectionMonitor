@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor">
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.rcsnet.bluetoothmonitor">
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -24,7 +25,7 @@
         <!-- when loss of connection is detected. -->
         <!-- ======================================================================== -->
         <activity
-            android:name=".ConnectionLostAlarm"
+            android:name="com.rcsnet.bluetoothmonitor.ConnectionLostAlarm"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
             android:theme="@style/FullscreenTheme">
@@ -42,10 +43,10 @@
         <!-- activity is launched. -->
         <!-- ======================================================================== -->
         <activity
-            android:name=".BluetoothConnect"
+            android:name="com.rcsnet.bluetoothmonitor.BluetoothConnect"
             android:label="@string/title_activity_bluetooth_connect"
             android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
+            <intent-filter tools:ignore="GoogleAppIndexingWarning">
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.VIEW" />
@@ -54,26 +55,26 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".BluetoothClientServer"
+            android:name="com.rcsnet.bluetoothmonitor.BluetoothClientServer"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_bluetooth_client_server"
-            android:parentActivityName=".BluetoothConnect"
+            android:parentActivityName="com.rcsnet.bluetoothmonitor.BluetoothConnect"
             android:theme="@style/FullscreenTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor.BluetoothConnect" />
+                android:value="com.rcsnet.bluetoothmonitor.BluetoothConnect" />
 
-            <intent-filter>
-                <action android:name="com.rcsnet.connectionmonitor.ClientServerDevice" />
+            <intent-filter tools:ignore="GoogleAppIndexingWarning">
+                <action android:name="com.rcsnet.bluetoothmonitor.ClientServerDevice" />
             </intent-filter>
         </activity>
         <activity
-            android:name=".BluetoothMonitorSettings"
+            android:name="com.rcsnet.bluetoothmonitor.BluetoothMonitorSettings"
             android:label="@string/title_activity_bluetooth_monitor_settings"
-            android:parentActivityName=".BluetoothConnect">
+            android:parentActivityName="com.rcsnet.bluetoothmonitor.BluetoothConnect">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor.BluetoothConnect" />
+                android:value="com.rcsnet.bluetoothmonitor.BluetoothConnect" />
         </activity>
     </application>
 

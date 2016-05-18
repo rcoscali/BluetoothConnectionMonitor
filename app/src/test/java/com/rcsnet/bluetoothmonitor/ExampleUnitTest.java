@@ -1,4 +1,4 @@
-package monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor;
+package com.rcsnet.bluetoothmonitor;
 
 import org.junit.Test;
 

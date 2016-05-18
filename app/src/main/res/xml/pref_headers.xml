@@ -3,17 +3,17 @@
     <!-- These settings headers are only used on tablets. -->
 
     <header
-        android:fragment="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor.BluetoothMonitorSettings$GeneralPreferenceFragment"
+        android:fragment="com.rcsnet.bluetoothmonitor.BluetoothMonitorSettings$GeneralPreferenceFragment"
         android:icon="@drawable/ic_info_black_24dp"
         android:title="@string/pref_header_general" />
 
     <header
-        android:fragment="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor.BluetoothMonitorSettings$NotificationPreferenceFragment"
+        android:fragment="com.rcsnet.bluetoothmonitor.BluetoothMonitorSettings$NotificationPreferenceFragment"
         android:icon="@drawable/ic_notifications_black_24dp"
         android:title="@string/pref_header_notifications" />
 
     <header
-        android:fragment="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor.BluetoothMonitorSettings$DataSyncPreferenceFragment"
+        android:fragment="com.rcsnet.bluetoothmonitor.BluetoothMonitorSettings$DataSyncPreferenceFragment"
         android:icon="@drawable/ic_sync_black_24dp"
         android:title="@string/pref_header_data_sync" />
 

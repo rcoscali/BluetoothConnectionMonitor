@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="monitor.bluetoothconnection.rcsnet.com.bluetoothconnectionmonitor.BluetoothConnect">
+    tools:context="com.rcsnet.bluetoothmonitor.BluetoothConnect">
     <item
         android:id="@+id/action_launch_server"
         android:orderInCategory="10"
