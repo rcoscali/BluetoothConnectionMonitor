@@ -15,6 +15,7 @@ import android.os.Message;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -35,6 +36,8 @@ import java.util.UUID;
 public class BluetoothClientServer
         extends AppCompatActivity
 {
+    private static final String TAG = "BluetoothMonitor";
+
     // States of the Ping state machine
     public static final int PING_STATE_INIT         = 0;
     public static final int PING_STATE_CONNECTING   = 1;
@@ -336,6 +339,7 @@ public class BluetoothClientServer
                                    mMsgNr++,
                                    PING_STATE_NAMES[mCurPingState],
                                    getResources().getText(resid));
+        Log.v(TAG, msg);
         mStateText.append(msg);
     }
 
@@ -343,6 +347,7 @@ public class BluetoothClientServer
     {
         String msg = String.format(getResources().getString(R.string.state_message_format), mMsgNr++,
                                    PING_STATE_NAMES[mCurPingState], str);
+        Log.v(TAG, msg);
         mStateText.append(msg);
     }
 
@@ -350,6 +355,7 @@ public class BluetoothClientServer
     {
         String msg = String.format(getResources().getString(R.string.state_error_format),
                                    PING_STATE_NAMES[mCurPingState], str);
+        Log.v(TAG, msg);
         mStateText.append(msg);
     }
 
@@ -785,21 +791,28 @@ public class BluetoothClientServer
     {
         private int    mMillis;
         private Thread mToTimeout;
+        private Object mMonitor;
 
-        public TimeoutThread(int millis, Thread toTimeout)
+        public TimeoutThread(int millis, Thread toTimeout, Object monitor)
         {
             mMillis = millis;
             mToTimeout = toTimeout;
+            mMonitor = monitor;
         }
 
         public void run()
         {
-            try
+            synchronized (mMonitor)
             {
-                wait(mMillis);
+                Log.v(TAG, "Running TimeOut Thread");
+                try
+                {
+                    wait(mMillis);
+                    mMonitor.notify();
+                }
+                catch (InterruptedException ignored) {}
+                mToTimeout.interrupt();
             }
-            catch (InterruptedException ignored) {}
-            mToTimeout.interrupt();
         }
     }
 
@@ -810,6 +823,7 @@ public class BluetoothClientServer
         private          ConnectedThread mmConnectedThread;
         private          TimeoutThread   mmTimeoutThread;
         private volatile boolean         mNotEnd;
+        public Object mMonitor = new Object();
 
         public PingThread(BluetoothSocket socket)
         {
@@ -828,8 +842,8 @@ public class BluetoothClientServer
         {
             while (mNotEnd)
             {
-                try
-                {
+                //try
+                //{
                     Message msg  = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
                     Bundle  data = new Bundle();
                     msg.arg1 = mCurPingState;
@@ -845,20 +859,23 @@ public class BluetoothClientServer
                     }
 
                     mmConnectedThread = new ConnectedThread(mSocket, buffer);
-                    mmTimeoutThread = new TimeoutThread(PING_TIMEOUT, mmConnectedThread);
-                    mmConnectedThread.start();
+                    mmTimeoutThread = new TimeoutThread(PING_TIMEOUT, mmConnectedThread, mMonitor);
+                    synchronized (mMonitor)
+                    {
+                        mmConnectedThread.start();
 
-                    mmConnectedThread.write(buffer);
+                        mmConnectedThread.write(buffer);
 
-                    // Tell main UI thread about data we sent in ping request
-                    msg = mHandler.obtainMessage(MESSAGE_DATAOUT);
-                    data = new Bundle();
-                    msg.arg1 = bytes;
-                    data.putString("dataout", new String(buffer));
-                    msg.setData(data);
+                        // Tell main UI thread about data we sent in ping request
+                        msg = mHandler.obtainMessage(MESSAGE_DATAOUT);
+                        data = new Bundle();
+                        msg.arg1 = bytes;
+                        data.putString("dataout", new String(buffer));
+                        msg.setData(data);
 
-                    // Start timeout thread
-                    mmTimeoutThread.start();
+                        // Start timeout thread
+                        //mmTimeoutThread.start();
+                    }
 
                     // Then wait either response received or timeout ends
                     // This is handled in ConnectedThread
@@ -878,9 +895,12 @@ public class BluetoothClientServer
                     }
 
                     // Then wait for next ping request
-                    wait(PING_REQUEST_PERIOD);
-                }
-                catch (InterruptedException ignored) {}
+                    synchronized (mMonitor)
+                    {
+                        //wait(PING_REQUEST_PERIOD);
+                    }
+                //}
+                //catch (InterruptedException ignored) {}
             }
 
             mmConnectedThread.cancel();
