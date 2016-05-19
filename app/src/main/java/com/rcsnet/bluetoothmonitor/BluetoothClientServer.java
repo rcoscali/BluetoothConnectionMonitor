@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -19,7 +18,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -77,7 +75,7 @@ public class BluetoothClientServer
     private final static int MESSAGE_DATAOUT          = 3;
     private final static int MESSAGE_DATAIN           = 4;
     private final static int MESSAGE_ERROR            = 5;
-    private final static int MESSAGE_CONNECT_THREAD_STOP = 6;
+    private final static int MESSAGE_PING_THREAD_STOP = 6;
 
 
     private SharedPreferences mSettings;
@@ -145,7 +143,7 @@ public class BluetoothClientServer
                 break;
 
             }
-            case MESSAGE_CONNECT_THREAD_STOP:
+            case MESSAGE_PING_THREAD_STOP:
                 mClientButtonView.setEnabled(true);
                 mCurPingState = PING_STATE_INIT;
                 break;
@@ -496,7 +494,7 @@ public class BluetoothClientServer
 
                 if (socket != null)
                 {
-                    ConnectedThread connectedThread = new ConnectedThread(socket, null);
+                    ConnectedThread connectedThread = new ConnectedThread(socket);
                     connectedThread.start();
                 }
             }
@@ -563,6 +561,15 @@ public class BluetoothClientServer
                 msg.setData(data);
                 msg.sendToTarget();
 
+                // Warn UI thread and changed state to connected
+                msg  = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
+                data = new Bundle();
+                msg.arg1 = mCurPingState;
+                msg.arg2 = PING_STATE_CONNECTED;
+                data.putString("reason", getResources().getString(R.string.connected_thread_started));
+                msg.setData(data);
+                msg.sendToTarget();
+
                 // and now, send ping request
                 mmPingThread = new PingThread(mmSocket);
                 mmPingThread.start();
@@ -584,8 +591,6 @@ public class BluetoothClientServer
                 {
                 }
             }
-            mHandler.obtainMessage(MESSAGE_CONNECT_THREAD_STOP).sendToTarget();
-
         }
 
         public void cancel()
@@ -614,11 +619,13 @@ public class BluetoothClientServer
         private final InputStream     mmInStream;
         private final OutputStream    mmOutStream;
         private final byte[]          mSentBuffer;
+        private Object mMonitor;
 
-        public ConnectedThread(BluetoothSocket socket, byte[] sentBuffer)
+        public ConnectedThread(BluetoothSocket socket, byte[] sentBuffer, Object monitor)
         {
             mmSocket = socket;
             mSentBuffer = sentBuffer;
+            mMonitor = monitor;
             InputStream  tmpIn  = null;
             OutputStream tmpOut = null;
 
@@ -639,6 +646,7 @@ public class BluetoothClientServer
         {
             mmSocket = socket;
             mSentBuffer = null;
+            mMonitor = new Object();
             InputStream  tmpIn  = null;
             OutputStream tmpOut = null;
 
@@ -657,30 +665,30 @@ public class BluetoothClientServer
 
         public void run()
         {
-            // Warn UI thread
-            Message msg  = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
-            Bundle  data = new Bundle();
-            msg.arg1 = mCurPingState;
-            msg.arg2 = PING_STATE_CONNECTED;
-            data.putString("reason", getResources().getString(R.string.connected_thread_started));
-            msg.setData(data);
-            msg.sendToTarget();
-
             byte[] buffer = new byte[1024];  // buffer store for the stream
             int    bytes; // bytes returned from read()
+            byte[] size;
 
+            synchronized(mMonitor)
+            {
+                size = new byte[1];
+            }
             // Keep listening to the InputStream until an exception occurs
             try
             {
 
                 // Read from the InputStream
-                bytes = mmInStream.read(buffer);
+                mmInStream.read(size);
+                mmInStream.read(buffer, 0, size[0]);
+                bytes = size[0];
+
+                byte[] bufferReceived = Arrays.copyOf(buffer, bytes);
 
                 // Tell UI about data received
-                msg = mHandler.obtainMessage(MESSAGE_DATAIN);
-                data = new Bundle();
+                Message msg = mHandler.obtainMessage(MESSAGE_DATAIN);
+                Bundle data = new Bundle();
                 msg.arg1 = bytes;
-                data.putString("datain", new String(buffer));
+                data.putString("datain", new String(bufferReceived));
                 msg.setData(data);
                 msg.sendToTarget();
 
@@ -689,7 +697,7 @@ public class BluetoothClientServer
                 // when we are in the context of a client
                 if (mSentBuffer != null)
                 {
-                    if (Arrays.equals(buffer, mSentBuffer) && mSentBuffer.length == bytes)
+                    if (Arrays.equals(bufferReceived, mSentBuffer))
                     {
                         msg = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
                         data = new Bundle();
@@ -726,12 +734,16 @@ public class BluetoothClientServer
                         msg.setData(data);
                         msg.sendToTarget();
                     }
+
+                    // Flush stream
+                    //mmInStream.skip(mmInStream.available());
                 }
                 // We are a server, just send back the data as a ping response
                 else
                 {
                     try
                     {
+                        mmOutStream.write(size);
                         mmOutStream.write(buffer);
                     }
                     catch (IOException ignored) {}
@@ -739,7 +751,8 @@ public class BluetoothClientServer
             }
             catch (IOException e)
             {
-                msg = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
+                Message msg = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
+                Bundle data = new Bundle();
                 msg.arg1 = mCurPingState;
                 switch (mCurPingState)
                 {
@@ -791,28 +804,32 @@ public class BluetoothClientServer
     {
         private int    mMillis;
         private Thread mToTimeout;
-        private Object mMonitor;
+        private Thread mMe;
 
-        public TimeoutThread(int millis, Thread toTimeout, Object monitor)
+        public TimeoutThread(int millis, Thread toTimeout)
         {
             mMillis = millis;
             mToTimeout = toTimeout;
-            mMonitor = monitor;
+            mMe = this;
         }
 
         public void run()
         {
-            synchronized (mMonitor)
+            Log.v(TAG, "Running TimeOut Thread");
+            try
             {
-                Log.v(TAG, "Running TimeOut Thread");
-                try
+                synchronized (this)
                 {
                     wait(mMillis);
-                    mMonitor.notify();
                 }
-                catch (InterruptedException ignored) {}
-                mToTimeout.interrupt();
             }
+            catch (InterruptedException ignored) {}
+            mToTimeout.interrupt();
+        }
+
+        public void cancel()
+        {
+            mMe.interrupt();
         }
     }
 
@@ -842,68 +859,68 @@ public class BluetoothClientServer
         {
             while (mNotEnd)
             {
-                //try
-                //{
-                    Message msg  = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
-                    Bundle  data = new Bundle();
-                    msg.arg1 = mCurPingState;
-                    msg.arg2 = PING_STATE_REQUESTED;
-                    data.putString("reason", getResources().getString(R.string.ping_thread_send_request));
-                    msg.setData(data);
+                int    bytes  = 2 + (int) (Math.random() * 14.0);
+                byte[] buffer = new byte[bytes+1];
+                buffer[0] = (byte)bytes;
+                for (int n = 1; n <= bytes; n++)
+                {
+                    buffer[n] = (byte) ((Math.random() * ('z' - 'A')) + 'A');
+                }
 
-                    int    bytes  = 2 + (int) (Math.random() * 14.0);
-                    byte[] buffer = new byte[bytes];
-                    for (int n = 0; n < bytes; n++)
-                    {
-                        buffer[n] = (byte) ((Math.random() * ('z' - 'A')) + 'A');
-                    }
+                mmConnectedThread = new ConnectedThread(mSocket, Arrays.copyOfRange(buffer, 1, buffer.length), this);
+                mmTimeoutThread = new TimeoutThread(PING_TIMEOUT, mmConnectedThread);
 
-                    mmConnectedThread = new ConnectedThread(mSocket, buffer);
-                    mmTimeoutThread = new TimeoutThread(PING_TIMEOUT, mmConnectedThread, mMonitor);
-                    synchronized (mMonitor)
-                    {
-                        mmConnectedThread.start();
+                synchronized (this)
+                {
+                    mmConnectedThread.start();
+                    this.notify();
+                }
+                mmConnectedThread.write(buffer);
 
-                        mmConnectedThread.write(buffer);
+                Message msg  = mHandler.obtainMessage(MESSAGE_STATE_TRANSITION);
+                Bundle  data = new Bundle();
+                msg.arg1 = mCurPingState;
+                msg.arg2 = PING_STATE_REQUESTED;
+                data.putString("reason", getResources().getString(R.string.ping_thread_send_request));
+                msg.setData(data);
 
-                        // Tell main UI thread about data we sent in ping request
-                        msg = mHandler.obtainMessage(MESSAGE_DATAOUT);
-                        data = new Bundle();
-                        msg.arg1 = bytes;
-                        data.putString("dataout", new String(buffer));
-                        msg.setData(data);
+                // Tell main UI thread about data we sent in ping request
+                msg = mHandler.obtainMessage(MESSAGE_DATAOUT);
+                data = new Bundle();
+                msg.arg1 = bytes;
+                data.putString("dataout", new String(Arrays.copyOfRange(buffer, 1, buffer.length)));
+                msg.setData(data);
 
-                        // Start timeout thread
-                        //mmTimeoutThread.start();
-                    }
+                try
+                {
+                    mmConnectedThread.join();
+                }
+                catch (InterruptedException ignored)
+                {
+                }
+                mmTimeoutThread.cancel();
+                try
+                {
+                    mmTimeoutThread.join();
+                }
+                catch (InterruptedException ignored)
+                {
+                }
 
-                    // Then wait either response received or timeout ends
-                    // This is handled in ConnectedThread
-                    try
+                try
+                {
+                    synchronized (this)
                     {
-                        mmConnectedThread.join();
+                        wait(1000);
                     }
-                    catch (InterruptedException ignored)
-                    {
-                    }
-                    try
-                    {
-                        mmTimeoutThread.join();
-                    }
-                    catch (InterruptedException ignored)
-                    {
-                    }
-
-                    // Then wait for next ping request
-                    synchronized (mMonitor)
-                    {
-                        //wait(PING_REQUEST_PERIOD);
-                    }
-                //}
-                //catch (InterruptedException ignored) {}
+                }
+                catch (InterruptedException e)
+                {
+                }
             }
 
             mmConnectedThread.cancel();
+            mHandler.obtainMessage(MESSAGE_PING_THREAD_STOP).sendToTarget();
         }
     }
 }
