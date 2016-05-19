@@ -23,7 +23,8 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:fitsSystemWindows="true"
+        android:clickable="false">
 
         <LinearLayout
             android:id="@+id/fullscreen_content_controls"
@@ -53,18 +54,22 @@
 
         <EditText
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="460dp"
             android:inputType="textMultiLine"
             android:ems="10"
             android:id="@+id/state_text"
             android:textStyle="normal"
             android:textSize="12sp"
             android:typeface="monospace"
-            android:theme="@android:style/Widget.DeviceDefault.EditText"
+            android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar"
             android:enabled="false"
             android:editable="false"
             style="@style/AppTheme"
-            android:clickable="false" />
+            android:clickable="false"
+            android:maxLines="1000"
+            android:background="#ffffff"
+            android:textColor="#000000"
+            android:foregroundGravity="top|left"/>
     </FrameLayout>
 
 </FrameLayout>

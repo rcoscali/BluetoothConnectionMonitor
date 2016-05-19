@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -73,6 +74,8 @@ public class BluetoothClientServer
     private final static int MESSAGE_DATAOUT          = 3;
     private final static int MESSAGE_DATAIN           = 4;
     private final static int MESSAGE_ERROR            = 5;
+    private final static int MESSAGE_CONNECT_THREAD_STOP = 6;
+
 
     private SharedPreferences mSettings;
 
@@ -115,7 +118,7 @@ public class BluetoothClientServer
             }
             case MESSAGE_ERROR:
             {
-                sendStateMessage(msg.getData().getString("msg"));
+                sendErrorMessage(msg.getData().getString("msg"));
                 mConnectThread.interrupt();
                 try
                 {
@@ -124,16 +127,26 @@ public class BluetoothClientServer
                 catch (InterruptedException ignored)
                 {
                 }
-                mAcceptThread.interrupt();
-                try
-                {
-                    mAcceptThread.join(200);
-                }
-                catch (InterruptedException ignored)
-                {
-                }
+
+//                if (mAcceptThread != null)
+//                {
+//                    mAcceptThread.interrupt();
+//                    try
+//                    {
+//                        mAcceptThread.join(200);
+//                    }
+//                    catch (InterruptedException ignored)
+//                    {
+//                    }
+//                }
                 break;
+
             }
+            case MESSAGE_CONNECT_THREAD_STOP:
+                mClientButtonView.setEnabled(true);
+                mCurPingState = PING_STATE_INIT;
+                break;
+
             default:
                 sendStateMessage(String.format((String) getResources().getText(R.string.unexpected_msg_received), msg.what));
             }
@@ -144,7 +157,7 @@ public class BluetoothClientServer
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
      */
-    private static final boolean AUTO_HIDE = true;
+    private static final boolean AUTO_HIDE = false;
 
     /**
      * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
@@ -159,6 +172,7 @@ public class BluetoothClientServer
     private static final int     UI_ANIMATION_DELAY = 300;
     private final        Handler mHideHandler       = new Handler();
     private View     mContentView;
+    private View     mClientButtonView;
     private EditText mStateText;
     private final Runnable mHidePart2Runnable = new Runnable()
     {
@@ -241,7 +255,7 @@ public class BluetoothClientServer
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
-
+        mClientButtonView = findViewById(R.id.client_button);
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener()
@@ -254,12 +268,20 @@ public class BluetoothClientServer
         });
         Intent intent = getIntent();
 
-        mDevice = intent.getParcelableExtra("device");
+        mDevice = null;
         mLocal = intent.getBooleanExtra("local", false);
+        if (!mLocal)
+        {
+            mDevice = intent.getParcelableExtra("device");
+            TextView deviceName = (TextView) findViewById(R.id.device_name);
+            deviceName.setText(mDevice.getName() == null ? getResources().getString(R.string.unknown_device) : mDevice.getName());
+        }
+        else
+        {
+            TextView deviceName = (TextView) findViewById(R.id.device_name);
+            deviceName.setText(getResources().getString(R.string.local_server));
+        }
 
-        TextView deviceName = (TextView) findViewById(R.id.device_name);
-        if (deviceName != null && mDevice != null)
-            deviceName.setText(mDevice.getName());
         mStateText = (EditText) findViewById(R.id.state_text);
         mMsgNr = 0;
         mCurPingState = PING_STATE_INIT;
@@ -279,6 +301,7 @@ public class BluetoothClientServer
             @Override
             public void onClick(View v)
             {
+                findViewById(R.id.client_button).setEnabled(false);
                 sendStateMessage((String) getResources().getText(R.string.launching_client));
                 mConnectThread = new ConnectThread(mDevice);
                 mConnectThread.start();
@@ -310,7 +333,7 @@ public class BluetoothClientServer
     private void sendStateMessage(int resid)
     {
         String msg = String.format(getResources().getString(R.string.state_message_format),
-                                   mMsgNr,
+                                   mMsgNr++,
                                    PING_STATE_NAMES[mCurPingState],
                                    getResources().getText(resid));
         mStateText.append(msg);
@@ -318,7 +341,14 @@ public class BluetoothClientServer
 
     private void sendStateMessage(String str)
     {
-        String msg = String.format(getResources().getString(R.string.state_message_format), mMsgNr,
+        String msg = String.format(getResources().getString(R.string.state_message_format), mMsgNr++,
+                                   PING_STATE_NAMES[mCurPingState], str);
+        mStateText.append(msg);
+    }
+
+    private void sendErrorMessage(String str)
+    {
+        String msg = String.format(getResources().getString(R.string.state_error_format),
                                    PING_STATE_NAMES[mCurPingState], str);
         mStateText.append(msg);
     }
@@ -331,7 +361,7 @@ public class BluetoothClientServer
         // Trigger the initial hide() shortly after the activity has been
         // created, to briefly hint to the user that UI controls
         // are available.
-        delayedHide(100);
+        if (AUTO_HIDE) delayedHide(100);
     }
 
     @Override
@@ -349,13 +379,12 @@ public class BluetoothClientServer
 
     private void toggle()
     {
-        if (mVisible)
+        if (AUTO_HIDE)
         {
-            hide();
-        }
-        else
-        {
-            show();
+            if (mVisible)
+                hide();
+            else
+                show();
         }
     }
 
@@ -372,7 +401,7 @@ public class BluetoothClientServer
 
         // Schedule a runnable to remove the status and navigation bar after a delay
         mHideHandler.removeCallbacks(mShowPart2Runnable);
-        mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
+        if (AUTO_HIDE) mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
     }
 
     @SuppressLint("InlinedApi")
@@ -385,7 +414,7 @@ public class BluetoothClientServer
 
         // Schedule a runnable to display UI elements after a delay
         mHideHandler.removeCallbacks(mHidePart2Runnable);
-        mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
+        if (AUTO_HIDE) mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
     }
 
     /**
@@ -503,7 +532,7 @@ public class BluetoothClientServer
             Bundle  data = new Bundle();
             msg.arg1 = mCurPingState;
             msg.arg2 = PING_STATE_CONNECTING;
-            data.putString("raeson", getResources().getString(R.string.connect_thread_started));
+            data.putString("reason", getResources().getString(R.string.connect_thread_started));
             msg.setData(data);
             msg.sendToTarget();
 
@@ -549,6 +578,8 @@ public class BluetoothClientServer
                 {
                 }
             }
+            mHandler.obtainMessage(MESSAGE_CONNECT_THREAD_STOP).sendToTarget();
+
         }
 
         public void cancel()
@@ -625,7 +656,7 @@ public class BluetoothClientServer
             Bundle  data = new Bundle();
             msg.arg1 = mCurPingState;
             msg.arg2 = PING_STATE_CONNECTED;
-            data.putString("raeson", getResources().getString(R.string.connected_thread_started));
+            data.putString("reason", getResources().getString(R.string.connected_thread_started));
             msg.setData(data);
             msg.sendToTarget();
 

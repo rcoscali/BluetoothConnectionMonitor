@@ -54,5 +54,8 @@
     <string name="no_bluetooth_device">Pas de périphérique Bluetooth</string>
     <string name="bytes_of_data_sent">%1$d octets de données envoyées: \'%2$s\'</string>
     <string name="bytes_of_data_received">%1$d octets de données reçues: \'%2$s\'</string>
-    <string name="state_message_format"><![CDATA[[%1$d] <%2$s> %3$s\\n]]></string>
+    <string name="state_message_format"><![CDATA[[%1$04d] <%2$s> %3$s\n]]></string>
+    <string name="state_error_format"><![CDATA[>****< <%1$s> %2$s\n]]></string>
+    <string name="unknown_device">Périphérique Inconnu</string>
+    <string name="local_server">Local Ping Server</string>
 </resources>

@@ -155,6 +155,17 @@ public class BluetoothConnect
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId())
         {
+        case R.id.action_launch_server:
+        {
+            Intent intent = new Intent(
+                    getApplicationContext(),
+                    BluetoothClientServer.class);
+            intent.putExtra("device", "");
+            intent.putExtra("local", true);
+            startActivity(intent);
+        }
+        break;
+
         case R.id.action_settings:
         {
             Intent intent = new Intent(getApplicationContext(), BluetoothMonitorSettings.class);
@@ -305,12 +316,12 @@ public class BluetoothConnect
             {
             case R.id.action_infos:
                 break;
-            case R.id.action_launch_server:
+            case R.id.action_ping_device:
                 Intent intent = new Intent(
                         getActivity().getApplicationContext(),
                         BluetoothClientServer.class);
-                intent.putExtra("device", "");
-                intent.putExtra("local", true);
+                intent.putExtra("device", device);
+                intent.putExtra("local", false);
                 startActivity(intent);
                 break;
             }
@@ -510,7 +521,9 @@ public class BluetoothConnect
             TextView  addrView = ViewHolder.get(convertView, R.id.row_item_address);
 
             BluetoothDevice device = getItem(position);
-            nameView.setText(device.getName());
+            nameView.setText(device.getName() == null
+                             ? "Unknown" /* mContext.getApplicationContext().getResources().getString(R.string.unknown_device) */
+                             : device.getName());
             addrView.setText(device.getAddress());
             if (device.getBluetoothClass().hasService(BluetoothClass.Service.AUDIO))
                 imgView.setImageResource(R.drawable.bluetooth_class_audio);
