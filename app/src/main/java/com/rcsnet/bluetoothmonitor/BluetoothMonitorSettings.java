@@ -220,8 +220,8 @@ public class BluetoothMonitorSettings
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
+            bindPreferenceSummaryToValue(findPreference("pref_include_known_devices"));
             bindPreferenceSummaryToValue(findPreference("example_text"));
-            bindPreferenceSummaryToValue(findPreference("example_list"));
         }
 
         @Override
@@ -257,6 +257,7 @@ public class BluetoothMonitorSettings
             // updated to reflect the new value, per the Android Design
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
+            bindPreferenceSummaryToValue(findPreference("notifications_new_message_vibrate"));
         }
 
         @Override
@@ -291,7 +292,9 @@ public class BluetoothMonitorSettings
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+            bindPreferenceSummaryToValue(findPreference("ping_frequency"));
+            bindPreferenceSummaryToValue(findPreference("ping_timeout"));
+            bindPreferenceSummaryToValue(findPreference("ping_failure_number"));
         }
 
         @Override

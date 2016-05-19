@@ -36,6 +36,7 @@ import java.util.List;
 public class BluetoothConnect
         extends AppCompatActivity
 {
+    public static final String TAG = "BluetoothConnect";
     private static final int     REQUEST_CODE_ENABLE_BLUETOOTH = 0;
     private              boolean mScanningDevices              = false;
     public static final  String  PREFS_NAME                    = "BluetoothConnectMonitorPreferences";
@@ -50,6 +51,7 @@ public class BluetoothConnect
      */
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private SharedPreferences    mSettings;
+    private PlaceholderFragment  mFragment;
 
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -66,7 +68,7 @@ public class BluetoothConnect
         setSupportActionBar(toolbar);
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(), this);
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
@@ -129,7 +131,6 @@ public class BluetoothConnect
             itemStopScan.setEnabled(true);
             MenuItemCompat.setShowAsAction(itemRestartScan, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
             MenuItemCompat.setShowAsAction(itemStopScan, MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
-
         }
         else
         {
@@ -174,6 +175,9 @@ public class BluetoothConnect
         break;
 
         case R.id.action_restart_scan:
+            mFragment.mArrayAdapter.clear();
+            if (getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean("pref_include_known_devices", false))
+                mFragment.addBluetoothKnownDevices();
             BluetoothAdapter.getDefaultAdapter().startDiscovery();
             mScanningDevices = true;
             break;
@@ -551,15 +555,15 @@ public class BluetoothConnect
     public class SectionsPagerAdapter
             extends FragmentPagerAdapter
     {
+        private BluetoothConnect mParent;
         private final int STATE_START            = 1;
         private final int STATE_DEVICE_SELECTED  = 2;
         private final int STATE_DEvICE_CONNECTED = 3;
-        private int mState;
 
-        public SectionsPagerAdapter(FragmentManager fm)
+        public SectionsPagerAdapter(FragmentManager fm, BluetoothConnect parent)
         {
             super(fm);
-            mState = STATE_START;
+            mParent = parent;
         }
 
         @Override
@@ -567,24 +571,15 @@ public class BluetoothConnect
         {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            return PlaceholderFragment.newInstance(position + 1);
+            PlaceholderFragment phf = PlaceholderFragment.newInstance(position + 1);
+            mParent.mFragment = phf;
+            return phf;
         }
 
         @Override
         public int getCount()
         {
-            // Show 3 total pages.
-            switch (mState)
-            {
-            case STATE_START:
-                return 1;
-            case STATE_DEVICE_SELECTED:
-                return 2;
-            case STATE_DEvICE_CONNECTED:
-                return 3;
-            default:
-                return 1;
-            }
+            return 1;
         }
 
         @Override
@@ -593,11 +588,7 @@ public class BluetoothConnect
             switch (position)
             {
             case 0:
-                return "Check Bluetooth Device";
-            case 1:
-                return "List Reachable Devices";
-            case 2:
-                return "Connect And Monitor";
+                return "Select Bluetooth Device";
             }
             return null;
         }

@@ -12,4 +12,9 @@
         android:singleLine="true"
         android:title="@string/pref_title_display_name" />
 
+    <SwitchPreference
+        android:key="pref_include_known_devices"
+        android:defaultValue="false"
+        android:title="@string/title_pref_include_known_devices"/>
+
 </PreferenceScreen>
