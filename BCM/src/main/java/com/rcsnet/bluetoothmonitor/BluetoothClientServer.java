@@ -28,8 +28,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 /**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
  */
 public class BluetoothClientServer
         extends AppCompatActivity
@@ -321,10 +320,12 @@ public class BluetoothClientServer
         if (!mLocal) {
             mDevice = intent.getParcelableExtra("device");
             TextView deviceName = (TextView) findViewById(R.id.device_name);
-            deviceName.setText(mDevice.getName() == null ? getResources().getString(R.string.unknown_device) : mDevice.getName());
+            if (deviceName != null)
+                deviceName.setText(mDevice.getName() == null ? getResources().getString(R.string.unknown_device) : mDevice.getName());
         } else {
             TextView deviceName = (TextView) findViewById(R.id.device_name);
-            deviceName.setText(getResources().getString(R.string.local_server));
+            if (deviceName != null)
+                deviceName.setText(getResources().getString(R.string.local_server));
         }
 
         mStateText = (EditText) findViewById(R.id.state_text);
@@ -344,7 +345,9 @@ public class BluetoothClientServer
         findViewById(R.id.client_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                findViewById(R.id.client_button).setEnabled(false);
+                View button = findViewById(R.id.client_button);
+                if (button != null)
+                    button.setEnabled(false);
                 sendStateMessage((String) getResources().getText(R.string.launching_client));
                 mConnectThread = new ConnectThread((BluetoothClientServer) getParent(), mDevice);
                 mConnectThread.start();

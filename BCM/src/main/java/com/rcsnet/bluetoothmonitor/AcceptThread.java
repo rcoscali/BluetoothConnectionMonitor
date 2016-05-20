@@ -11,6 +11,7 @@ import android.os.Message;
 import java.io.IOException;
 
 /**
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
  * Created by cohen on 20/05/2016.
  */
 public class AcceptThread
@@ -25,8 +26,8 @@ public class AcceptThread
         BluetoothServerSocket tmp = null;
         try
         {
-            tmp = mAdapter.listenUsingRfcommWithServiceRecord(mActivity.NAME,
-                                                              mActivity.MY_UUID);
+            tmp = mAdapter.listenUsingRfcommWithServiceRecord(BluetoothClientServer.NAME,
+                                                              BluetoothClientServer.MY_UUID);
         }
         catch (IOException ignored) { }
         mmServerSocket = tmp;
@@ -36,7 +37,7 @@ public class AcceptThread
     public void run()
     {
         // Warn UI thread
-        Message msg  = mHandler.obtainMessage(mActivity.MESSAGE_WARN);
+        Message msg  = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_WARN);
         Bundle data = new Bundle();
         data.putString("msg", mResources.getString(R.string.accept_thread_started));
         msg.setData(data);
@@ -49,7 +50,7 @@ public class AcceptThread
             try
             {
                 // Signal UI thread we are about to accept incoming data
-                msg = mHandler.obtainMessage(mActivity.MESSAGE_WARN);
+                msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_WARN);
                 data = new Bundle();
                 data.putString("msg", mResources.getString(R.string.accept_thread_accepting_data));
                 msg.setData(data);
@@ -59,7 +60,7 @@ public class AcceptThread
                 socket = mmServerSocket.accept();
 
                 // Some data arrived, tell UI
-                msg = mHandler.obtainMessage(mActivity.MESSAGE_WARN);
+                msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_WARN);
                 data = new Bundle();
                 data.putString("msg", mResources.getString(R.string.accept_thread_data_received));
                 msg.setData(data);
@@ -67,7 +68,7 @@ public class AcceptThread
             }
             catch (IOException e)
             {
-                msg = mHandler.obtainMessage(mActivity.MESSAGE_WARN);
+                msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_WARN);
                 data = new Bundle();
                 data.putString("msg", mResources.getString(R.string.accept_thread_io_exception));
                 msg.setData(data);

@@ -27,7 +27,7 @@
             android:text="Medium Text"
             android:id="@+id/row_item_text"
             android:layout_gravity="center"
-            android:textSize="20dp"
+            android:textSize="20sp"
             android:focusable="false"
             android:enabled="true" />
 

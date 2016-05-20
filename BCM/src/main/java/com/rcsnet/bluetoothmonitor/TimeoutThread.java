@@ -3,6 +3,7 @@ package com.rcsnet.bluetoothmonitor;
 import android.util.Log;
 
 /**
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
  * Created by cohen on 20/05/2016.
  */
 public class TimeoutThread

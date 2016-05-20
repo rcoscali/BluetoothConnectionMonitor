@@ -1,6 +1,5 @@
 package com.rcsnet.bluetoothmonitor;
 
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
@@ -33,6 +32,7 @@ import java.util.List;
  * Android Design: Settings</a> for design guidelines and the <a
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
  */
 public class BluetoothMonitorSettings
         extends AppCompatPreferenceActivity
@@ -221,7 +221,6 @@ public class BluetoothMonitorSettings
             // updated to reflect the new value, per the Android Design
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("pref_include_known_devices"));
-            bindPreferenceSummaryToValue(findPreference("example_text"));
         }
 
         @Override

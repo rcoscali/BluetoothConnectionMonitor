@@ -8,6 +8,7 @@ import android.os.Message;
 import java.io.IOException;
 
 /**
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
  * Created by cohen on 20/05/2016.
  */
 public class ConnectThread
@@ -26,7 +27,7 @@ public class ConnectThread
         mmDevice = device;
         try
         {
-            tmp = mmDevice.createRfcommSocketToServiceRecord(mActivity.MY_UUID);
+            tmp = mmDevice.createRfcommSocketToServiceRecord(BluetoothClientServer.MY_UUID);
         }
         catch (IOException ignored) { }
         mmSocket = tmp;
@@ -37,10 +38,10 @@ public class ConnectThread
     void run()
     {
         // Warn UI thread
-        Message msg  = mHandler.obtainMessage(mActivity.MESSAGE_STATE_TRANSITION);
+        Message msg  = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
         Bundle data = new Bundle();
         msg.arg1 = mActivity.getState();
-        msg.arg2 = mActivity.PING_STATE_CONNECTING;
+        msg.arg2 = BluetoothClientServer.PING_STATE_CONNECTING;
         data.putString("reason", mResources.getString(R.string.connect_thread_started));
         msg.setData(data);
         msg.sendToTarget();
@@ -50,7 +51,7 @@ public class ConnectThread
         try
         {
             // Signal UI thread we are connecting
-            msg = mHandler.obtainMessage(mActivity.MESSAGE_WARN);
+            msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_WARN);
             data = new Bundle();
             data.putString("msg", mResources.getString(R.string.connect_thread_connecting));
             msg.setData(data);
@@ -60,14 +61,14 @@ public class ConnectThread
             mmSocket.connect();
 
             // Connection succeed, signal UI thread
-            msg = mHandler.obtainMessage(mActivity.MESSAGE_WARN);
+            msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_WARN);
             data = new Bundle();
             data.putString("msg", mResources.getString(R.string.connect_thread_connection_succeed));
             msg.setData(data);
             msg.sendToTarget();
 
             // Warn UI thread and changed state to connected
-            msg  = mHandler.obtainMessage(mActivity.MESSAGE_STATE_TRANSITION);
+            msg  = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
             data = new Bundle();
             msg.arg1 = mActivity.getState();
             msg.arg2 = mActivity.setState(false);
@@ -84,7 +85,7 @@ public class ConnectThread
             try
             {
                 // Signal UI thread we are not able to connect
-                msg = mHandler.obtainMessage(mActivity.MESSAGE_ERROR);
+                msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_ERROR);
                 data = new Bundle();
                 data.putString("msg", mResources.getString(R.string.connect_thread_io_exception));
                 msg.setData(data);
@@ -93,7 +94,7 @@ public class ConnectThread
                 mmSocket.close();
 
                 // Warn UI thread and changed state to connected
-                msg  = mHandler.obtainMessage(mActivity.MESSAGE_STATE_TRANSITION);
+                msg  = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
                 data = new Bundle();
                 msg.arg1 = mActivity.getState();
                 msg.arg2 = mActivity.setState(true);

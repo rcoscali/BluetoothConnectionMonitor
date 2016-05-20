@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 
 /**
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
  * Created by cohen on 20/05/2016.
  */
 public class ConnectedThread
@@ -55,6 +56,7 @@ public class ConnectedThread
         this(activity, socket, null, new Object());
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public
     void run()
@@ -72,14 +74,14 @@ public class ConnectedThread
         {
 
             // Read from the InputStream
-            mmInStream.read(size);
-            mmInStream.read(buffer, 0, size[0]);
+            int sizesize = mmInStream.read(size);
+            int bufsize = mmInStream.read(buffer, 0, size[0]);
             bytes = size[0];
 
             byte[] bufferReceived = Arrays.copyOf(buffer, bytes);
 
             // Tell UI about data received
-            Message msg = mHandler.obtainMessage(mActivity.MESSAGE_DATAIN);
+            Message msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_DATAIN);
             Bundle data = new Bundle();
             msg.arg1 = bytes;
             data.putString("datain", new String(bufferReceived));
@@ -93,7 +95,7 @@ public class ConnectedThread
             {
                 if (Arrays.equals(bufferReceived, mSentBuffer))
                 {
-                    msg = mHandler.obtainMessage(mActivity.MESSAGE_STATE_TRANSITION);
+                    msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
                     data = new Bundle();
                     msg.arg1 = mActivity.getState();
                     msg.arg2 = mActivity.setState(false);
@@ -103,7 +105,7 @@ public class ConnectedThread
                 }
                 else
                 {
-                    msg = mHandler.obtainMessage(mActivity.MESSAGE_STATE_TRANSITION);
+                    msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
                     data = new Bundle();
                     msg.arg1 = mActivity.getState();
                     msg.arg2 = mActivity.setState(true);
@@ -128,7 +130,7 @@ public class ConnectedThread
         }
         catch (IOException e)
         {
-            Message msg = mHandler.obtainMessage(mActivity.MESSAGE_STATE_TRANSITION);
+            Message msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
             Bundle data = new Bundle();
             msg.arg1 = mActivity.getState();
             msg.arg2 = mActivity.setState(true);

@@ -9,20 +9,15 @@
     <string name="row_item_icon">Row item icon</string>
     <string name="action_restart_scan">Restart devices scan</string>
     <string name="action_stop_scan">Stop devices scan</string>
-
     <string name="title_activity_bluetooth_client_server">BluetoothClientServer</string>
     <string name="client_button">Ping Device</string>
     <string name="server_button">Launch Server</string>
     <string name="title_activity_bluetooth_monitor_settings">Settings</string>
-
     <!-- Strings related to Settings -->
-
     <!-- Example General settings -->
     <string name="pref_header_general">General</string>
-
     <!-- Example settings for Data & Sync -->
     <string name="pref_header_data_sync"><![CDATA[Data & Sync]]></string>
-
     <string name="pref_title_ping_frequency">Ping Frequency</string>
     <string-array name="pref_ping_frequency_titles">
         <item>10 Hz</item>
@@ -42,7 +37,6 @@
         <item>5000</item>
         <item>10000</item>
     </string-array>
-
     <string name="pref_title_ping_timeout">Ping Timeout</string>
     <string-array name="pref_ping_timeout_titles">
         <item>250 ms</item>
@@ -56,7 +50,6 @@
         <item>1000</item>
         <item>2000</item>
     </string-array>
-
     <string name="pref_title_ping_failure_number">Ping Failure Number</string>
     <string-array name="pref_ping_failure_number_titles">
         <item>3</item>
@@ -70,15 +63,10 @@
         <item>10</item>
         <item>20</item>
     </string-array>
-
     <!-- Example settings for Notifications -->
     <string name="pref_header_notifications">Notifications</string>
-
-    <string name="pref_title_new_message_notifications">New message notifications</string>
-
     <string name="pref_title_ringtone">Ringtone</string>
     <string name="pref_ringtone_silent">Silent</string>
-
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="action_launch_server">Launch Server</string>
     <string name="action_display_infos">Display Device Infos</string>

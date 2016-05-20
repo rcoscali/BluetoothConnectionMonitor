@@ -5,6 +5,7 @@ import android.content.res.Resources;
 import android.os.Handler;
 
 /**
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
  * Created by cohen on 20/05/2016.
  */
 public abstract class ConnectionManagement
@@ -47,7 +48,7 @@ public abstract class ConnectionManagement
         {
             mMe.join();
         }
-        catch (InterruptedException ie)
+        catch (InterruptedException ignored)
         {
         }
     }

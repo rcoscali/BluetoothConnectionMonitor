@@ -7,6 +7,7 @@ import android.os.Message;
 import java.util.Arrays;
 
 /**
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
  * Created by cohen on 20/05/2016.
  */
 public class PingThread
@@ -36,7 +37,7 @@ public class PingThread
         {
             mmConnectedThread.join();
         }
-        catch(InterruptedException ie)
+        catch(InterruptedException ignored)
         {
         }
         mmTimeoutThread.interrupt();
@@ -44,7 +45,7 @@ public class PingThread
         {
             mmTimeoutThread.join();
         }
-        catch(InterruptedException ie)
+        catch(InterruptedException ignored)
         {
         }
         super.cancel();
@@ -69,7 +70,7 @@ public class PingThread
                                                     Arrays.copyOfRange(buffer, 1, buffer.length),
                                                     this);
             mmTimeoutThread = new TimeoutThread(mActivity,
-                                                mActivity.PING_TIMEOUT,
+                                                BluetoothClientServer.PING_TIMEOUT,
                                                 mmConnectedThread);
 
             synchronized (this)
@@ -79,7 +80,7 @@ public class PingThread
             }
             mmConnectedThread.write(buffer);
 
-            Message msg  = mHandler.obtainMessage(mActivity.MESSAGE_STATE_TRANSITION);
+            Message msg  = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
             Bundle data = new Bundle();
             msg.arg1 = mActivity.getState();
             msg.arg2 = mActivity.setState(false);
@@ -87,7 +88,7 @@ public class PingThread
             msg.setData(data);
 
             // Tell main UI thread about data we sent in ping request
-            msg = mHandler.obtainMessage(mActivity.MESSAGE_DATAOUT);
+            msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_DATAOUT);
             data = new Bundle();
             msg.arg1 = bytes;
             data.putString("dataout", new String(Arrays.copyOfRange(buffer, 1, buffer.length)));
@@ -116,12 +117,12 @@ public class PingThread
                     wait(1000);
                 }
             }
-            catch (InterruptedException e)
+            catch (InterruptedException ignored)
             {
             }
         }
 
         mmConnectedThread.cancel();
-        mHandler.obtainMessage(mActivity.MESSAGE_PING_THREAD_STOP).sendToTarget();
+        mHandler.obtainMessage(BluetoothClientServer.MESSAGE_PING_THREAD_STOP).sendToTarget();
     }
 }

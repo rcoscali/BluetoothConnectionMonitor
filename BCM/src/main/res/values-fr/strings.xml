@@ -9,21 +9,56 @@
     <string name="client_button">Surveiller ce Périphérique</string>
     <string name="connection_lost">ALERTE: Connexion Perdue !!!</string>
     <string name="dismiss_button">Rejeter</string>
-    <string name="pref_default_display_name">Marcel Dupont</string>
-    <string name="pref_description_social_recommendations">Recommandations de personnes à contacter         basées sur l\'historique de vos messages</string>
     <string name="pref_header_data_sync"><![CDATA[Données & Synchronisation]]></string>
     <string name="pref_header_general">Généraux</string>
     <string name="pref_header_notifications">Notifications</string>
     <string name="pref_ringtone_silent">Silence</string>
-    <string name="pref_title_add_friends_to_messages">Ajouter des Amis aux Messages</string>
-    <string name="pref_title_display_name">Nom Affiché</string>
-    <string name="pref_title_new_message_notifications">Notifications de Nouveau Message</string>
     <string name="pref_title_ringtone">Sonnerie</string>
-    <string name="pref_title_social_recommendations">Activer Recommandations Sociales</string>
     <string name="pref_title_ping_frequency">Fréquence du Ping</string>
+    <string-array name="pref_ping_frequency_titles">
+        <item>10 Hz</item>
+        <item>5 Hz</item>
+        <item>2 Hz</item>
+        <item>1 Hz</item>
+        <item>0.5 Hz</item>
+        <item>0.2 Hz</item>
+        <item>0.1 Hz</item>
+    </string-array>
+    <string-array name="pref_ping_frequency_values">
+        <item>100</item>
+        <item>200</item>
+        <item>500</item>
+        <item>1000</item>
+        <item>2000</item>
+        <item>5000</item>
+        <item>10000</item>
+    </string-array>
     <string name="pref_title_ping_timeout">Période de Temporisation du Ping</string>
+    <string-array name="pref_ping_timeout_titles">
+        <item>250 ms</item>
+        <item>500 ms</item>
+        <item>1 s</item>
+        <item>2 s</item>
+    </string-array>
+    <string-array name="pref_ping_timeout_values">
+        <item>250</item>
+        <item>500</item>
+        <item>1000</item>
+        <item>2000</item>
+    </string-array>
     <string name="pref_title_ping_failure_number">Nombre d\'échecs avant Alarme</string>
-    <string name="pref_title_system_sync_settings">Paramètres de Synchronisation Système</string>
+    <string-array name="pref_ping_failure_number_titles">
+        <item>3</item>
+        <item>5</item>
+        <item>10</item>
+        <item>20</item>
+    </string-array>
+    <string-array name="pref_ping_failure_number_values">
+        <item>3</item>
+        <item>5</item>
+        <item>10</item>
+        <item>20</item>
+    </string-array>
     <string name="pref_title_vibrate">Vibreur</string>
     <string name="row_item_icon">Icône de la ligne d\'un élément</string>
     <string name="section_format">Mise en Place de la Connexion Bluetooth: étape #%1$d</string>

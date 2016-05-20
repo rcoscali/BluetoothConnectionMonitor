@@ -32,6 +32,7 @@ import java.util.List;
  * It displays available bluetooth devices and allow the user to
  * launch a ping client for a selected device.
  * It also allows to launch a ping server.
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
  */
 public class BluetoothConnect
         extends AppCompatActivity
