@@ -94,4 +94,5 @@
     <string name="unknown_device">Périphérique Inconnu</string>
     <string name="local_server">Local Ping Server</string>
     <string name="title_pref_include_known_devices">Include Known Bluetooth Devices</string>
+    <string name="alarm_launched">Alarm Launched</string>
 </resources>

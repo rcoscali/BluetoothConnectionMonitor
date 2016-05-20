@@ -32,6 +32,7 @@ import java.util.UUID;
  */
 public class BluetoothClientServer
         extends AppCompatActivity
+    implements View.OnClickListener
 {
     // Android log tag
     private static final String TAG = "BluetoothMonitor";
@@ -342,17 +343,7 @@ public class BluetoothClientServer
         findViewById(R.id.client_button).setOnTouchListener(mDelayHideTouchListener);
         assert findViewById(R.id.client_button) != null;
         //noinspection ConstantConditions
-        findViewById(R.id.client_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                View button = findViewById(R.id.client_button);
-                if (button != null)
-                    button.setEnabled(false);
-                sendStateMessage((String) getResources().getText(R.string.launching_client));
-                mConnectThread = new ConnectThread((BluetoothClientServer) getParent(), mDevice);
-                mConnectThread.start();
-            }
-        });
+        findViewById(R.id.client_button).setOnClickListener(this);
 
         if (mLocal) {
             sendStateMessage((String) getResources().getText(R.string.launching_server));
@@ -459,5 +450,15 @@ public class BluetoothClientServer
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    @Override
+    public void onClick(View v) {
+        View button = findViewById(R.id.client_button);
+        if (button != null)
+            button.setEnabled(false);
+        sendStateMessage((String) getResources().getText(R.string.launching_client));
+        mConnectThread = new ConnectThread(this, mDevice);
+        mConnectThread.start();
     }
 }

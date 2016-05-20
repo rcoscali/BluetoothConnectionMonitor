@@ -120,6 +120,16 @@ public class PingThread
             catch (InterruptedException ignored)
             {
             }
+
+            if (mActivity.getState() == BluetoothClientServer.PING_STATE_ALARM) {
+                msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
+                data = new Bundle();
+                msg.arg1 = mActivity.getState();
+                msg.arg2 = mActivity.setState(false);
+                data.putString("reason", mResources.getString(R.string.alarm_launched));
+                msg.setData(data);
+                mNotEnd = false;
+            }
         }
 
         mmConnectedThread.cancel();
