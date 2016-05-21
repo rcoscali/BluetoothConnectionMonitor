@@ -10,6 +10,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.IInterface;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.os.RemoteException;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -22,6 +27,9 @@ import android.util.SparseArray;
 import android.view.*;
 import android.widget.*;
 
+import com.rcsnet.bluetoothmonitor.ISetServerInstance.Stub;
+
+import java.io.FileDescriptor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,11 +44,14 @@ import java.util.List;
  */
 public class BluetoothConnect
         extends AppCompatActivity
+    implements ISetServerInstance, ISetClientInstance, Parcelable
 {
     public static final String TAG = "BluetoothConnect";
     private static final int     REQUEST_CODE_ENABLE_BLUETOOTH = 0;
     private              boolean mScanningDevices              = false;
     public static final  String  PREFS_NAME                    = "BluetoothConnectMonitorPreferences";
+    private PingThread mClient = null;
+    private AcceptThread mServer = null;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -58,6 +69,8 @@ public class BluetoothConnect
      * The {@link ViewPager} that will host the section contents.
      */
     private ViewPager mViewPager;
+    private IClientServer mIServer;
+    private IClientServer mIClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -86,6 +99,54 @@ public class BluetoothConnect
 
             }
         });
+    }
+
+    @Override
+    protected
+    void onStart()
+    {
+        super.onStart();
+        Log.v(TAG, "onStart()");
+    }
+
+    @Override
+    protected
+    void onRestart()
+    {
+        super.onRestart();
+        Log.v(TAG, "onRestart()");
+    }
+
+    @Override
+    protected
+    void onResume()
+    {
+        super.onResume();
+        Log.v(TAG, "onResume()");
+    }
+
+    @Override
+    protected
+    void onStop()
+    {
+        super.onStop();
+        Log.v(TAG, "onStop()");
+    }
+
+    @Override
+    protected
+    void onPause()
+    {
+        super.onPause();
+        Log.v(TAG, "onPause()");
+    }
+
+    @Override
+    protected
+    void onDestroy()
+    {
+        super.onDestroy();
+        Log.v(TAG, "onDestroy()");
     }
 
     /**
@@ -159,11 +220,23 @@ public class BluetoothConnect
         {
         case R.id.action_launch_server:
         {
-            Intent intent = new Intent(
-                    getApplicationContext(),
-                    BluetoothClientServer.class);
+            // If a server was already launched
+            if (mIServer != null)
+            {
+                try
+                {
+                    // Try to recall it
+                    mIServer.recall();
+                    break;
+                }
+                catch (RemoteException ignored) {
+                }
+            }
+            Intent intent = new Intent(getApplicationContext(),
+                                       BluetoothClientServer.class);
             intent.putExtra("device", "");
             intent.putExtra("local", true);
+            intent.putExtra("set_server_instance", (Parcelable) this);
             startActivity(intent);
         }
         break;
@@ -202,6 +275,53 @@ public class BluetoothConnect
     {
         this.mScanningDevices = scanningDevices;
     }
+
+    @Override
+    public
+    void setServer(IClientServer server)
+        throws RemoteException
+    {
+        mIServer = server;
+    }
+
+    @Override
+    public
+    IBinder asBinder() {
+        return null;
+    }
+
+    @Override
+    public
+    void setClient(IClientServer client)
+        throws RemoteException
+    {
+        mIClient = client;
+    }
+
+    @Override
+    public
+    int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public
+    void writeToParcel(Parcel dest, int flags) {
+        dest.writeStrongInterface(this);
+    }
+
+    public static final Parcelable.Creator<ISetClientInstance> CREATOR = new Parcelable.Creator<ISetClientInstance>() {
+        public
+        ISetClientInstance createFromParcel(Parcel in) {
+            return ISetClientInstance.Stub.asInterface(in.readStrongBinder());
+        }
+
+        @Override
+        public
+        ISetClientInstance[] newArray(int size) {
+            return new ISetClientInstance[size];
+        }
+    };
 
     /**
      * A placeholder fragment containing a simple view.
@@ -281,6 +401,7 @@ public class BluetoothConnect
                     Intent intent = new Intent(getActivity().getApplicationContext(), BluetoothClientServer.class);
                     intent.putExtra("device", device);
                     intent.putExtra("local", false);
+                    intent.putExtra("set_client_instance", (Parcelable)getActivity());
                     startActivity(intent);
                 }
             });
@@ -327,6 +448,7 @@ public class BluetoothConnect
                         BluetoothClientServer.class);
                 intent.putExtra("device", device);
                 intent.putExtra("local", false);
+                intent.putExtra("set_client_instance", (Parcelable)getActivity());
                 startActivity(intent);
                 break;
             }

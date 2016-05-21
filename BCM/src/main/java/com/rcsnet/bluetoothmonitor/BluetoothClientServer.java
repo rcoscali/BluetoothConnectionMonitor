@@ -1,16 +1,15 @@
 package com.rcsnet.bluetoothmonitor;
 
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.RemoteException;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -20,11 +19,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -32,14 +26,13 @@ import java.util.UUID;
  */
 public class BluetoothClientServer
         extends AppCompatActivity
-    implements View.OnClickListener
+    implements View.OnClickListener, IClientServer
 {
     // Android log tag
     private static final String TAG = "BluetoothMonitor";
 
     public BluetoothClientServer ()
     {
-        PING_STATE_NAMES = getResources().getStringArray(R.array.states_names);
     }
 
     public final static String NAME = "BluetoothMonitor";
@@ -134,7 +127,7 @@ public class BluetoothClientServer
         return new_state;
     }
 
-    public final String PING_STATE_NAMES[];
+    public String PING_STATE_NAMES[];
 
     public final static int MESSAGE_STATE_TRANSITION = 1;
     public final static int MESSAGE_WARN = 2;
@@ -289,11 +282,13 @@ public class BluetoothClientServer
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Get i18n state names
+        PING_STATE_NAMES = getResources().getStringArray(R.array.states_names);
+
         setContentView(R.layout.activity_bluetooth_client_server);
         ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
+        if (actionBar != null)
             actionBar.setDisplayHomeAsUpEnabled(true);
-        }
 
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
@@ -316,10 +311,28 @@ public class BluetoothClientServer
             TextView deviceName = (TextView) findViewById(R.id.device_name);
             if (deviceName != null)
                 deviceName.setText(mDevice.getName() == null ? getResources().getString(R.string.unknown_device) : mDevice.getName());
-        } else {
+            ISetClientInstance origin = intent.getParcelableExtra("set_client_instance");
+            try
+            {
+                origin.setClient(this);
+            }
+            catch (RemoteException ignored)
+            {
+            }
+        }
+        else
+        {
             TextView deviceName = (TextView) findViewById(R.id.device_name);
             if (deviceName != null)
                 deviceName.setText(getResources().getString(R.string.local_server));
+            ISetServerInstance origin = intent.getParcelableExtra("set_server_instance");
+            try
+            {
+                origin.setServer(this);
+            }
+            catch (RemoteException ignored)
+            {
+            }
         }
 
         mStateText = (EditText) findViewById(R.id.state_text);
@@ -355,6 +368,54 @@ public class BluetoothClientServer
 
             }
         });
+    }
+
+    @Override
+    protected
+    void onStart()
+    {
+        super.onStart();
+        Log.v(TAG, "onStart()");
+    }
+
+    @Override
+    protected
+    void onRestart()
+    {
+        super.onRestart();
+        Log.v(TAG, "onRestart()");
+    }
+
+    @Override
+    protected
+    void onResume()
+    {
+        super.onResume();
+        Log.v(TAG, "onResume()");
+    }
+
+    @Override
+    protected
+    void onStop()
+    {
+        super.onStop();
+        Log.v(TAG, "onStop()");
+    }
+
+    @Override
+    protected
+    void onPause()
+    {
+        super.onPause();
+        Log.v(TAG, "onPause()");
+    }
+
+    @Override
+    protected
+    void onDestroy()
+    {
+        super.onDestroy();
+        Log.v(TAG, "onDestroy()");
     }
 
     private void sendStateMessage(int resid) {
@@ -425,15 +486,18 @@ public class BluetoothClientServer
     }
 
     @SuppressLint("InlinedApi")
-    private void show() {
+    private
+    void show()
+    {
         // Show the system bar
-        mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+        mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                                           View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         mVisible = true;
 
         // Schedule a runnable to display UI elements after a delay
         mHideHandler.removeCallbacks(mHidePart2Runnable);
-        if (AUTO_HIDE) mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
+        if (AUTO_HIDE)
+            mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
     }
 
     /**
@@ -454,4 +518,31 @@ public class BluetoothClientServer
         mConnectThread = new ConnectThread(this, mDevice);
         mConnectThread.start();
     }
+
+    @Override
+    public IBinder asBinder() {
+        return null;
+    }
+
+    @Override
+    public
+    void recall()
+        throws RemoteException
+    {
+        setVisible(true);
+    }
+
+    @Override
+    public
+    void onBackPressed()
+    {
+        super.onBackPressed();
+        Log.v(TAG, "On back pressed called");
+        if (mAcceptThread != null)
+            mAcceptThread.cancel();
+        if (mConnectThread != null)
+            mConnectThread.cancel();
+    }
+
+
 }
