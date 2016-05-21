@@ -1,6 +1,8 @@
 package com.rcsnet.bluetoothmonitor;
 
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothSocket;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
@@ -57,6 +59,7 @@ public class ConnectedThread
         this(activity, socket, null, new Object());
     }
 
+    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public
@@ -73,17 +76,12 @@ public class ConnectedThread
         // Keep listening to the InputStream until an exception occurs
         try
         {
-            while (mNotEnd) {
+            while (mNotEnd)
+            {
                 // Read from the InputStream
-                Log.v(TAG, "Bytes Available in stream " + mmInStream.available());
                 int sizesize = mmInStream.read(size);
-                int bufsize = mmInStream.read(buffer, 0, size[0]);
                 bytes = size[0];
-
-                // Flush stream ????
-                Log.v(TAG, "Bytes Available in stream " + mmInStream.available());
-                //mmInStream.skip(mmInStream.available());
-                Log.v(TAG, "Bytes Available in stream " + mmInStream.available());
+                int bufsize = mmInStream.read(buffer, 0, bytes);
 
                 byte[] bufferReceived = Arrays.copyOf(buffer, bytes);
 
