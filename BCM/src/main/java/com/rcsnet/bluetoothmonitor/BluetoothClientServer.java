@@ -37,6 +37,11 @@ public class BluetoothClientServer
     // Android log tag
     private static final String TAG = "BluetoothMonitor";
 
+    public BluetoothClientServer ()
+    {
+        PING_STATE_NAMES = getResources().getStringArray(R.array.states_names);
+    }
+
     public final static String NAME = "BluetoothMonitor";
     public final static UUID MY_UUID = UUID.fromString("86706344-b90c-478e-aa84-ec67f9631031");
 
@@ -129,19 +134,7 @@ public class BluetoothClientServer
         return new_state;
     }
 
-    public static final String PING_STATE_NAMES[] =
-            {
-                    "Init",
-                    "Connecting",
-                    "Connected",
-                    "Requested",
-                    "Acknowledged",
-                    "First Failure",
-                    "Second Failure",
-                    "Third Failure",
-                    "ALARM !!!",
-                    "Stopped"
-            };
+    public final String PING_STATE_NAMES[];
 
     public final static int MESSAGE_STATE_TRANSITION = 1;
     public final static int MESSAGE_WARN = 2;

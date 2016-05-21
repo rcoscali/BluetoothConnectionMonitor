@@ -13,6 +13,18 @@
     <string name="client_button">Ping Device</string>
     <string name="server_button">Launch Server</string>
     <string name="title_activity_bluetooth_monitor_settings">Settings</string>
+    <string-array name="states_names">
+        <item>Init</item>
+        <item>Connecting</item>
+        <item>Connected</item>
+        <item>Requested</item>
+        <item>Acknowledged</item>
+        <item>First Failure</item>
+        <item>Second Failure</item>
+        <item>Third Failure</item>
+        <item>ALARM !!!</item>
+        <item>Stopped</item>
+    </string-array>
     <!-- Strings related to Settings -->
     <!-- Example General settings -->
     <string name="pref_header_general">General</string>
