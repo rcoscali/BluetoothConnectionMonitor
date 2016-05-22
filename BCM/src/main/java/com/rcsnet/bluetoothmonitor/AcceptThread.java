@@ -1,11 +1,8 @@
 package com.rcsnet.bluetoothmonitor;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.content.res.Resources;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Message;
 
 import java.io.IOException;
@@ -19,6 +16,7 @@ public class AcceptThread
 {
     // Server for the bluetooth socket
     private final BluetoothServerSocket mmServerSocket;
+    private       TimeoutThread         mTimeoutThread;
 
     public AcceptThread(BluetoothClientServer activity)
     {
@@ -31,11 +29,15 @@ public class AcceptThread
         }
         catch (IOException ignored) { }
         mmServerSocket = tmp;
+        mTimeoutThread = new TimeoutThread(activity, 1000, this);
     }
 
     @Override
     public void run()
     {
+        // Starting timeout
+        mTimeoutThread.start();
+
         // Warn UI thread
         Message msg  = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_WARN);
         Bundle data = new Bundle();
@@ -49,10 +51,11 @@ public class AcceptThread
         {
             try
             {
-                // Signal UI thread we are about to accept incoming data
-                msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_WARN);
+                msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
                 data = new Bundle();
-                data.putString("msg", mResources.getString(R.string.accept_thread_accepting_data));
+                msg.arg1 = mActivity.getState();
+                msg.arg2 = mActivity.setState(false);
+                data.putString("reason", mResources.getString(R.string.accept_thread_accepting_data));
                 msg.setData(data);
                 msg.sendToTarget();
 
@@ -76,10 +79,36 @@ public class AcceptThread
                 break;
             }
 
+            ConnectedThread connectedThread;
+
             if (socket != null)
             {
-                ConnectedThread connectedThread = new ConnectedThread(mActivity, socket);
+                connectedThread = new ConnectedThread(mActivity, socket);
                 connectedThread.start();
+                try
+                {
+                    connectedThread.join();
+                }
+                catch (InterruptedException ie)
+                {
+                    // Transition for server
+                    // Server Transition
+                    msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
+                    data = new Bundle();
+                    msg.arg1 = mActivity.getState();
+                    msg.arg2 = mActivity.setState(true);
+                    data.putString("reason", mResources.getString(R.string.accept_thread_timeout));
+                    msg.setData(data);
+                    msg.sendToTarget();
+                }
+                mTimeoutThread.interrupt();
+                try
+                {
+                    mTimeoutThread.join();
+                }
+                catch (InterruptedException ignored)
+                {
+                }
             }
         }
     }

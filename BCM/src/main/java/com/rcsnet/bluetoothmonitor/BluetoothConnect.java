@@ -249,6 +249,28 @@ public class BluetoothConnect
             return fragment;
         }
 
+        public static void setListViewHeightBasedOnChildren(ListView listView) {
+            ListAdapter listAdapter = listView.getAdapter();
+            if (listAdapter == null)
+                return;
+
+            int desiredWidth = View.MeasureSpec
+                .makeMeasureSpec(listView.getWidth(), View.MeasureSpec.UNSPECIFIED);
+            int totalHeight = 0;
+            View view = null;
+            for (int i = 0; i < listAdapter.getCount(); i++) {
+                view = listAdapter.getView(i, view, listView);
+                if (i == 0)
+                    view.setLayoutParams(new ViewGroup.LayoutParams(desiredWidth, ViewPager.LayoutParams.WRAP_CONTENT));
+
+                view.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
+                totalHeight += view.getMeasuredHeight();
+            }
+            ViewGroup.LayoutParams params = listView.getLayoutParams();
+            params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+            listView.setLayoutParams(params);
+        }
+
         /**
          * Create the view for this fragment
          *
@@ -266,9 +288,20 @@ public class BluetoothConnect
             mRootView = inflater.inflate(R.layout.fragment_bluetooth_connect, container, false);
             mTextView = (TextView) mRootView.findViewById(R.id.section_label);
             mListView = (ListView) mRootView.findViewById(R.id.section_list);
+            setListViewHeightBasedOnChildren(mListView);
             mProgressBar = (ProgressBar) mRootView.findViewById(R.id.progressBar);
             mArrayAdapter = new DeviceArrayAdapter(this.getActivity());
             mListView.setAdapter(mArrayAdapter);
+            mListView.setOnTouchListener(new View.OnTouchListener()
+            {
+                @Override
+                public
+                boolean onTouch(View v, MotionEvent event)
+                {
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                    return false;
+                }
+            });
             registerForContextMenu(mListView);
             mListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
             {
@@ -284,6 +317,7 @@ public class BluetoothConnect
                     startActivity(intent);
                 }
             });
+
             mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             if (mBluetoothAdapter == null)
             {

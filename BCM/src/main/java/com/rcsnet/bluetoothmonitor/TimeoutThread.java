@@ -32,9 +32,13 @@ public class TimeoutThread
             synchronized (this)
             {
                 wait(mMillis);
+                Log.v(TAG, "Timeout runs out of time: interrupting ...");
+                mToTimeout.interrupt();
             }
         }
-        catch (InterruptedException ignored) {}
-        mToTimeout.interrupt();
+        catch (InterruptedException ignored)
+        {
+            Log.v(TAG, "Timeout canceled");
+        }
     }
 }

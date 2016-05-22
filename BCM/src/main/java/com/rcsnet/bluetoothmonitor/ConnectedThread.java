@@ -5,8 +5,6 @@ import android.bluetooth.BluetoothSocket;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
-import android.util.Log;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,6 +24,7 @@ public class ConnectedThread
     private final OutputStream    mmOutStream;
     private final byte[]          mSentBuffer;
     private final Object          mMonitor;
+    private       TimeoutThread   mTimeoutThread;
 
     public ConnectedThread(BluetoothClientServer activity,
                            BluetoothSocket socket,
@@ -51,6 +50,7 @@ public class ConnectedThread
 
         mmInStream = tmpIn;
         mmOutStream = tmpOut;
+        mTimeoutThread = null;
     }
 
     public ConnectedThread(BluetoothClientServer activity,
@@ -84,19 +84,37 @@ public class ConnectedThread
                 int bufsize = mmInStream.read(buffer, 0, bytes);
 
                 byte[] bufferReceived = Arrays.copyOf(buffer, bytes);
+                Message msg;
+                Bundle data;
+
+                if (mSentBuffer == null)
+                {
+                    // Transition for server
+                    // Server Transition
+                    msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
+                    data = new Bundle();
+                    msg.arg1 = mActivity.getState();
+                    msg.arg2 = mActivity.setState(false);
+                    data.putString("reason", mResources.getString(R.string.connected_thread_data_received));
+                    msg.setData(data);
+                    msg.sendToTarget();
+
+                    mTimeoutThread = new TimeoutThread(mActivity, 1000, this);
+                    mTimeoutThread.start();
+                }
 
                 // Tell UI about data received
-                Message msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_DATAIN);
-                Bundle data = new Bundle();
+                msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_DATAIN);
+                data = new Bundle();
                 msg.arg1 = bytes;
                 data.putString("datain", new String(bufferReceived));
                 msg.setData(data);
                 msg.sendToTarget();
 
-
                 // Check data are the ones expected
                 // when we are in the context of a client
                 if (mSentBuffer != null) {
+
                     if (Arrays.equals(bufferReceived, mSentBuffer)) {
                         msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
                         data = new Bundle();
@@ -120,11 +138,68 @@ public class ConnectedThread
                 else {
                     try
                     {
+                        if (!isInterrupted())
+                        {
+                            mTimeoutThread.cancel();
+                            try {
+                                mTimeoutThread.join();
+                            }
+                            catch (InterruptedException ignored) {
+                            }
+                        }
+                        else
+                        {
+                            msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
+                            data = new Bundle();
+                            msg.arg1 = mActivity.getState();
+                            msg.arg2 = mActivity.setState(true);
+                            data.putString("reason", mResources.getString(R.string.connected_thread_data_timeout));
+                            msg.setData(data);
+                            msg.sendToTarget();
+                            mNotEnd = true;
+                            break;
+                        }
+
                         mmOutStream.write(size);
                         mmOutStream.write(Arrays.copyOf(buffer, bytes));
+
+                        // Server Transition
+                        msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
+                        data = new Bundle();
+                        msg.arg1 = mActivity.getState();
+                        msg.arg2 = mActivity.setState(false);
+                        data.putString("reason", mResources.getString(R.string.connected_thread_data_acknowledge));
+                        msg.setData(data);
+                        msg.sendToTarget();
+
+                        // Tell UI about data received
+                        msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_DATAOUT);
+                        data = new Bundle();
+                        msg.arg1 = bytes;
+                        data.putString("dataout", new String(Arrays.copyOf(buffer, bytes)));
+                        msg.setData(data);
+                        msg.sendToTarget();
+
                     }
-                    catch (IOException ignored)
+                    catch (IOException e)
                     {
+                        mTimeoutThread.cancel();
+                        try
+                        {
+                            mTimeoutThread.join();
+                        }
+                        catch (InterruptedException ignored) {
+                        }
+
+                        mNotEnd = false;
+
+                        msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
+                        data = new Bundle();
+                        msg.arg1 = mActivity.getState();
+                        msg.arg2 = mActivity.setState(true);
+                        data.putString("reason", mResources.getString(R.string.connected_thread_io_exception));
+                        msg.setData(data);
+                        msg.sendToTarget();
                     }
                 }
             }

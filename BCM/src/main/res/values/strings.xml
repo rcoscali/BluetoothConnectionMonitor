@@ -24,6 +24,7 @@
         <item>Third Failure</item>
         <item>ALARM !!!</item>
         <item>Stopped</item>
+        <item>Listening</item>
     </string-array>
     <!-- Strings related to Settings -->
     <!-- Example General settings -->
@@ -110,4 +111,7 @@
     <string name="local_server">Local Ping Server</string>
     <string name="title_pref_include_known_devices">Include Known Bluetooth Devices</string>
     <string name="alarm_launched">Alarm Launched</string>
+    <string name="connected_thread_data_received">Data received</string>
+    <string name="accept_thread_timeout">Accept Thread: Timeout Waiting For Data</string>
+    <string name="connected_thread_data_timeout">Connected Thread: Timeout While Receiving Data</string>
 </resources>

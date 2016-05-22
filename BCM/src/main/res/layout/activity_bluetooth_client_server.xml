@@ -64,9 +64,10 @@
             android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar"
             android:enabled="false"
             android:editable="false"
-            style="@style/AppTheme"
+            android:scrollbarStyle="@style/AppTheme"
+            android:scrollbars="vertical"
             android:clickable="false"
-            android:maxLines="1000"
+            android:maxLines="20"
             android:background="#ffffff"
             android:textColor="#000000"
             android:foregroundGravity="top|left"/>

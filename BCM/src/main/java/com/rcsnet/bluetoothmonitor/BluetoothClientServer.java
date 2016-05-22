@@ -1,10 +1,7 @@
 package com.rcsnet.bluetoothmonitor;
 
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -14,17 +11,15 @@ import android.os.Message;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Scroller;
 import android.widget.TextView;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -39,7 +34,6 @@ public class BluetoothClientServer
 
     public BluetoothClientServer ()
     {
-        PING_STATE_NAMES = getResources().getStringArray(R.array.states_names);
     }
 
     public final static String NAME = "BluetoothMonitor";
@@ -56,6 +50,11 @@ public class BluetoothClientServer
     public static final int PING_STATE_FAILURE3 = 7;
     public static final int PING_STATE_ALARM = 8;
     public static final int PING_STATE_STOPPED = 9;
+    public static final int PING_STATE_LISTENING = 10;
+
+    public static final int MODE_CLIENT = 1;
+    public static final int MODE_SERVER = 2;
+    private int mMode;
 
     // Ping timeout (millis)
     public static final int PING_TIMEOUT = 1000;
@@ -75,9 +74,20 @@ public class BluetoothClientServer
         {
             case PING_STATE_INIT:
                 if (!err)
-                    new_state = PING_STATE_CONNECTING;
+                {
+                    if (mMode == MODE_SERVER)
+                        new_state = PING_STATE_LISTENING;
+                    else
+                        new_state = PING_STATE_CONNECTING;
+                }
                 else
                     new_state = PING_STATE_STOPPED;
+                break;
+            case PING_STATE_LISTENING:
+                if (!err)
+                    new_state = PING_STATE_ACKNOWLEDGED;
+                else
+                    new_state = PING_STATE_FAILURE1;
                 break;
             case PING_STATE_CONNECTING:
                 if (!err)
@@ -99,7 +109,12 @@ public class BluetoothClientServer
                 break;
             case PING_STATE_ACKNOWLEDGED:
                 if (!err)
-                    new_state = PING_STATE_REQUESTED;
+                {
+                    if (mMode == MODE_SERVER)
+                        new_state = PING_STATE_LISTENING;
+                    else
+                        new_state = PING_STATE_REQUESTED;
+                }
                 else
                     new_state = PING_STATE_FAILURE1;
                 break;
@@ -134,7 +149,7 @@ public class BluetoothClientServer
         return new_state;
     }
 
-    public final String PING_STATE_NAMES[];
+    public String PING_STATE_NAMES[];
 
     public final static int MESSAGE_STATE_TRANSITION = 1;
     public final static int MESSAGE_WARN = 2;
@@ -289,6 +304,8 @@ public class BluetoothClientServer
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        PING_STATE_NAMES = getResources().getStringArray(R.array.states_names);
+
         setContentView(R.layout.activity_bluetooth_client_server);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -312,17 +329,32 @@ public class BluetoothClientServer
         mDevice = null;
         mLocal = intent.getBooleanExtra("local", false);
         if (!mLocal) {
+            mMode = MODE_CLIENT;
             mDevice = intent.getParcelableExtra("device");
             TextView deviceName = (TextView) findViewById(R.id.device_name);
             if (deviceName != null)
                 deviceName.setText(mDevice.getName() == null ? getResources().getString(R.string.unknown_device) : mDevice.getName());
         } else {
+            mMode = MODE_SERVER;
             TextView deviceName = (TextView) findViewById(R.id.device_name);
             if (deviceName != null)
                 deviceName.setText(getResources().getString(R.string.local_server));
         }
 
         mStateText = (EditText) findViewById(R.id.state_text);
+        mStateText.setScroller(new Scroller(getApplicationContext()));
+        mStateText.setVerticalScrollBarEnabled(true);
+        mStateText.setMovementMethod(new ScrollingMovementMethod());
+        mStateText.setOnTouchListener(new View.OnTouchListener()
+        {
+            @Override
+            public
+            boolean onTouch(View v, MotionEvent event)
+            {
+                v.getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
+            }
+        });
         mMsgNr = 0;
         mCurPingState = PING_STATE_INIT;
         sendStateMessage(R.string.starting);
