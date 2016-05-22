@@ -32,6 +32,25 @@ public class BluetoothClientServer
     // Android log tag
     private static final String TAG = "BluetoothMonitor";
 
+    private int mPingTimeout;
+    public
+    int getPingTimeout() {
+        return mPingTimeout;
+    }
+
+    private int mPingFrequency;
+    public
+    int getPingFrequency() {
+        return mPingFrequency;
+    }
+
+    private int mPingFailureNumber;
+    public
+    int getPingFailureNumber() {
+        return mPingFailureNumber;
+    }
+    private int mFailureNumber;
+
     public BluetoothClientServer ()
     {
     }
@@ -45,21 +64,14 @@ public class BluetoothClientServer
     public static final int PING_STATE_CONNECTED = 2;
     public static final int PING_STATE_REQUESTED = 3;
     public static final int PING_STATE_ACKNOWLEDGED = 4;
-    public static final int PING_STATE_FAILURE1 = 5;
-    public static final int PING_STATE_FAILURE2 = 6;
-    public static final int PING_STATE_FAILURE3 = 7;
-    public static final int PING_STATE_ALARM = 8;
-    public static final int PING_STATE_STOPPED = 9;
-    public static final int PING_STATE_LISTENING = 10;
+    public static final int PING_STATE_FAILURE = 5;
+    public static final int PING_STATE_ALARM = 6;
+    public static final int PING_STATE_STOPPED = 7;
+    public static final int PING_STATE_LISTENING = 8;
 
     public static final int MODE_CLIENT = 1;
     public static final int MODE_SERVER = 2;
     private int mMode;
-
-    // Ping timeout (millis)
-    public static final int PING_TIMEOUT = 1000;
-    // Ping period (millis)
-    public static final int PING_REQUEST_PERIOD = 1000;
 
     private int mCurPingState;
 
@@ -87,7 +99,7 @@ public class BluetoothClientServer
                 if (!err)
                     new_state = PING_STATE_ACKNOWLEDGED;
                 else
-                    new_state = PING_STATE_FAILURE1;
+                    new_state = PING_STATE_FAILURE;
                 break;
             case PING_STATE_CONNECTING:
                 if (!err)
@@ -99,13 +111,13 @@ public class BluetoothClientServer
                 if (!err)
                     new_state = PING_STATE_REQUESTED;
                 else
-                    new_state = PING_STATE_FAILURE1;
+                    new_state = PING_STATE_FAILURE;
                 break;
             case PING_STATE_REQUESTED:
                 if (!err)
                     new_state = PING_STATE_ACKNOWLEDGED;
                 else
-                    new_state = PING_STATE_FAILURE1;
+                    new_state = PING_STATE_FAILURE;
                 break;
             case PING_STATE_ACKNOWLEDGED:
                 if (!err)
@@ -116,30 +128,26 @@ public class BluetoothClientServer
                         new_state = PING_STATE_REQUESTED;
                 }
                 else
-                    new_state = PING_STATE_FAILURE1;
+                    new_state = PING_STATE_FAILURE;
                 break;
-            case PING_STATE_FAILURE1:
+            case PING_STATE_FAILURE:
                 if (!err)
+                {
                     new_state = PING_STATE_ACKNOWLEDGED;
-                else
-                    new_state = PING_STATE_FAILURE2;
-                break;
-            case PING_STATE_FAILURE2:
-                if (!err)
-                    new_state = PING_STATE_ACKNOWLEDGED;
-                else
-                    new_state = PING_STATE_FAILURE3;
-                break;
-            case PING_STATE_FAILURE3:
-                if (!err)
-                    new_state = PING_STATE_ACKNOWLEDGED;
+                    mFailureNumber = 0;
+                }
                 else
                 {
-                    new_state = PING_STATE_ALARM;
-                    Intent intent = new Intent(
+                    if (mFailureNumber >= mPingFailureNumber)
+                    {
+                        new_state = PING_STATE_ALARM;
+                        Intent intent = new Intent(
                             getApplicationContext(),
                             ConnectionLostAlarm.class);
-                    startActivity(intent);
+                        startActivity(intent);
+                    }
+                    else
+                      mFailureNumber++;
                 }
                 break;
             case PING_STATE_ALARM:
@@ -380,11 +388,42 @@ public class BluetoothClientServer
         }
 
         // Preferences
-        mSettings = getSharedPreferences(BluetoothConnect.PREFS_NAME, 0);
+        mSettings = getPreferences(MODE_PRIVATE);
+        mPingFrequency = Integer.parseInt(mSettings.getString("ping_frequency", "1000"));
+        mPingTimeout = Integer.parseInt(mSettings.getString("ping_timeout", "1000"));
+        mPingFailureNumber = Integer.parseInt(mSettings.getString("ping_failure_number", "3"));
         mSettings.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+                if (s.equals("ping_frequency"))
+                {
+                    String ping_frequency_str = sharedPreferences.getString("ping_frequency", "1000");
+                    mPingFrequency = Integer.getInteger(ping_frequency_str);
+                }
+                else if (s.equals("ping_timeout"))
+                {
+                    String ping_timeout_str = sharedPreferences.getString("ping_timeout", "1000");
+                    mPingTimeout = Integer.getInteger(ping_timeout_str);
+                }
+                else if (s.equals("ping_failure_number"))
+                {
+                    String ping_failure_number_str = sharedPreferences.getString("ping_failure_number", "3");
+                    mPingFailureNumber = Integer.getInteger(ping_failure_number_str);
+                }
+                /*
+                if (s.equals("pref_include_known_devices"))
+                {
+                    mIncludeKnownDevices = sharedPreferences.getBoolean("pref_include_known_devices", true);
+                }
+                else if (s.equals("notifications_new_message_ringtone"))
+                {
 
+                }
+                else if (s.equals("notifications_new_message_vibrate"))
+                {
+
+                }
+                */
             }
         });
     }

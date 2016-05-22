@@ -53,6 +53,7 @@ public class BluetoothConnect
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private SharedPreferences    mSettings;
     private PlaceholderFragment  mFragment;
+    private boolean              mIncludeKnownDevices;
 
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -78,12 +79,39 @@ public class BluetoothConnect
 
         // Preferences
         mSettings = getPreferences(MODE_PRIVATE);
+        mIncludeKnownDevices = mSettings.getBoolean("pref_include_known_devices", true);
+
         mSettings.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener()
         {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s)
             {
+                if (s.equals("pref_include_known_devices"))
+                {
+                    mIncludeKnownDevices = sharedPreferences.getBoolean("pref_include_known_devices", true);
+                }
+                /*
+                if (s.equals("ping_frequency"))
+                {
 
+                }
+                else if (s.equals("ping_timeout"))
+                {
+
+                }
+                else if (s.equals("ping_failure_number"))
+                {
+
+                }
+                else if (s.equals("notifications_new_message_ringtone"))
+                {
+
+                }
+                else if (s.equals("notifications_new_message_vibrate"))
+                {
+
+                }
+                */
             }
         });
     }
@@ -177,7 +205,7 @@ public class BluetoothConnect
 
         case R.id.action_restart_scan:
             mFragment.mArrayAdapter.clear();
-            if (getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean("pref_include_known_devices", false))
+            if (mIncludeKnownDevices)
                 mFragment.addBluetoothKnownDevices();
             BluetoothAdapter.getDefaultAdapter().startDiscovery();
             mScanningDevices = true;
@@ -338,7 +366,8 @@ public class BluetoothConnect
                 else
                 {
                     ((DeviceArrayAdapter) mListView.getAdapter()).clear();
-                    addBluetoothKnownDevices();
+                    if (((BluetoothConnect)getActivity()).mIncludeKnownDevices)
+                        addBluetoothKnownDevices();
                     addBluetoothNewDevices();
                 }
             }
@@ -388,7 +417,8 @@ public class BluetoothConnect
             else
             {
                 ((DeviceArrayAdapter) mListView.getAdapter()).clear();
-                addBluetoothKnownDevices();
+                if (((BluetoothConnect)getActivity()).mIncludeKnownDevices)
+                    addBluetoothKnownDevices();
                 addBluetoothNewDevices();
             }
         }
@@ -412,7 +442,9 @@ public class BluetoothConnect
                 }
                 else if (BluetoothDevice.ACTION_FOUND.equals(action))
                 {
-                    mArrayAdapter.add((BluetoothDevice) intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE));
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    if (!mArrayAdapter.contains(device))
+                        mArrayAdapter.add(device);
                 }
             }
         };
@@ -496,22 +528,31 @@ public class BluetoothConnect
             notifyDataSetChanged();
         }
 
-        public void add(BluetoothDevice device)
+        public
+        void add(BluetoothDevice device)
         {
             mDevices.add(device);
             notifyDataSetChanged();
         }
 
-        public void addAll(Collection<? extends BluetoothDevice> devices)
+        public
+        void addAll(Collection<? extends BluetoothDevice> devices)
         {
             mDevices.addAll(devices);
             notifyDataSetChanged();
         }
 
-        public void clear()
+        public
+        void clear()
         {
             mDevices.clear();
             notifyDataSetChanged();
+        }
+
+        public
+        boolean contains(BluetoothDevice device)
+        {
+            return mDevices.contains(device);
         }
 
         public int getCount()

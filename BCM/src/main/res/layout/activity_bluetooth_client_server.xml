@@ -64,7 +64,6 @@
             android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar"
             android:enabled="false"
             android:editable="false"
-            android:scrollbarStyle="@style/AppTheme"
             android:scrollbars="vertical"
             android:clickable="false"
             android:maxLines="20"

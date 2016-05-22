@@ -70,7 +70,7 @@ public class PingThread
                                                     Arrays.copyOfRange(buffer, 1, buffer.length),
                                                     this);
             mmTimeoutThread = new TimeoutThread(mActivity,
-                                                BluetoothClientServer.PING_TIMEOUT,
+                                                mActivity.getPingTimeout(),
                                                 mmConnectedThread);
 
             synchronized (this)
@@ -114,7 +114,7 @@ public class PingThread
             {
                 synchronized (this)
                 {
-                    wait(1000);
+                    wait(mActivity.getPingFrequency());
                 }
             }
             catch (InterruptedException ignored)
