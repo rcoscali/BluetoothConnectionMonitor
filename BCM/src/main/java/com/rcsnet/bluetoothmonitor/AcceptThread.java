@@ -33,9 +33,6 @@ public class AcceptThread
     @Override
     public void run()
     {
-        // Starting timeout
-        mTimeoutThread.start();
-
         // Warn UI thread
         Message msg  = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_WARN);
         Bundle data = new Bundle();
