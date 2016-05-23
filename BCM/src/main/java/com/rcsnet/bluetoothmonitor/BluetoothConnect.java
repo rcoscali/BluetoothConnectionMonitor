@@ -467,10 +467,17 @@ public class BluetoothConnect
         public void onDestroy()
         {
             super.onDestroy();
-            mBluetoothAdapter.cancelDiscovery();
+            if (mBluetoothAdapter != null)
+                mBluetoothAdapter.cancelDiscovery();
             getActivity().invalidateOptionsMenu();
             ((BluetoothConnect) getActivity()).setScanningDevices(false);
-            getContext().unregisterReceiver(mBluetoothReceiver);
+            try
+            {
+                getContext().unregisterReceiver(mBluetoothReceiver);
+            }
+            catch(IllegalArgumentException ignored)
+            {
+            }
         }
 
         private void addBluetoothKnownDevices()

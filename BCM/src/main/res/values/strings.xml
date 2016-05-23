@@ -114,4 +114,6 @@
     <string name="connected_thread_data_received">Data received</string>
     <string name="accept_thread_timeout">Accept Thread: Timeout Waiting For Data</string>
     <string name="connected_thread_data_timeout">Connected Thread: Timeout While Receiving Data</string>
+    <string name="ping_request_min_char_number">Ping Request Minimum Size</string>
+    <string name="ping_request_max_char_number">Ping Request Maximum Size</string>
 </resources>

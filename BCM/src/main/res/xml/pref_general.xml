@@ -7,4 +7,14 @@
         android:defaultValue="false"
         android:title="@string/title_pref_include_known_devices"/>
 
+    <EditTextPreference
+        android:key="ping_request_min_char_number"
+        android:defaultValue="2"
+        android:title="@string/ping_request_min_char_number"/>
+
+    <EditTextPreference
+        android:key="ping_request_max_char_number"
+        android:defaultValue="16"
+        android:title="@string/ping_request_max_char_number"/>
+
 </PreferenceScreen>

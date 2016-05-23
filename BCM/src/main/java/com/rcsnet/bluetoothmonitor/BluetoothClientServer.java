@@ -32,7 +32,16 @@ public class BluetoothClientServer
     // Android log tag
     private static final String TAG = "BluetoothMonitor";
 
+    private static final String PING_FREQUENCY_DEFAULT = "1000";
+    private static final String PING_TIMEOUT_DEFAULT = "1000";
+    private static final String PING_FAILURE_NUMBER_DEFAULT = "3";
+    private static final int PING_REQUEST_MIN_CHAR_NR_DEFAULT = 2;
+    private static final int PING_REQUEST_MAX_CHAR_NR_DEFAULT = 16;
+
     private int mPingTimeout;
+    private int mPingRequestMinCharNr;
+    private int mPingRequestMaxCharNr;
+
     public
     int getPingTimeout() {
         return mPingTimeout;
@@ -392,23 +401,33 @@ public class BluetoothClientServer
         mPingFrequency = Integer.parseInt(mSettings.getString("ping_frequency", "1000"));
         mPingTimeout = Integer.parseInt(mSettings.getString("ping_timeout", "1000"));
         mPingFailureNumber = Integer.parseInt(mSettings.getString("ping_failure_number", "3"));
+        mPingRequestMinCharNr = mSettings.getInt("ping_request_min_char_number", PING_REQUEST_MIN_CHAR_NR_DEFAULT);
+        mPingRequestMaxCharNr = mSettings.getInt("ping_request_max_char_number", PING_REQUEST_MAX_CHAR_NR_DEFAULT);
         mSettings.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
                 if (s.equals("ping_frequency"))
                 {
-                    String ping_frequency_str = sharedPreferences.getString("ping_frequency", "1000");
+                    String ping_frequency_str = sharedPreferences.getString("ping_frequency", PING_FREQUENCY_DEFAULT);
                     mPingFrequency = Integer.getInteger(ping_frequency_str);
                 }
                 else if (s.equals("ping_timeout"))
                 {
-                    String ping_timeout_str = sharedPreferences.getString("ping_timeout", "1000");
+                    String ping_timeout_str = sharedPreferences.getString("ping_timeout", PING_TIMEOUT_DEFAULT);
                     mPingTimeout = Integer.getInteger(ping_timeout_str);
                 }
                 else if (s.equals("ping_failure_number"))
                 {
-                    String ping_failure_number_str = sharedPreferences.getString("ping_failure_number", "3");
+                    String ping_failure_number_str = sharedPreferences.getString("ping_failure_number", PING_FAILURE_NUMBER_DEFAULT);
                     mPingFailureNumber = Integer.getInteger(ping_failure_number_str);
+                }
+                else if (s.equals("ping_request_min_char_number"))
+                {
+                    mPingRequestMinCharNr = sharedPreferences.getInt("ping_request_min_char_number", PING_REQUEST_MIN_CHAR_NR_DEFAULT);
+                }
+                else if (s.equals("ping_request_max_char_number"))
+                {
+                    mPingRequestMaxCharNr = sharedPreferences.getInt("ping_request_max_char_number", PING_REQUEST_MAX_CHAR_NR_DEFAULT);
                 }
                 /*
                 if (s.equals("pref_include_known_devices"))
@@ -523,6 +542,8 @@ public class BluetoothClientServer
             button.setEnabled(false);
         sendStateMessage((String) getResources().getText(R.string.launching_client));
         mConnectThread = new ConnectThread(this, mDevice);
+        mConnectThread.setPingRequestMinSize(mPingRequestMinCharNr);
+        mConnectThread.setPingRequestMaxSize(mPingRequestMaxCharNr);
         mConnectThread.start();
     }
 }

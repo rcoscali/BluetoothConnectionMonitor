@@ -111,4 +111,6 @@
     <string name="connected_thread_data_received">Données Reçues</string>
     <string name="accept_thread_timeout">Tâche d\'Ecoute: Temporisation échue pendant l\'attente des données</string>
     <string name="connected_thread_data_timeout">Tâche de Réception: Temporisation échue pendant la réception des données</string>
+    <string name="ping_request_min_char_number">Ping Request Minimum Size</string>
+    <string name="ping_request_max_char_number">Ping Request Maximum Size</string>
 </resources>

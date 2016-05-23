@@ -29,6 +29,19 @@ public class ConnectThread
         }
         catch (IOException ignored) { }
         mmSocket = tmp;
+        mmPingThread = new PingThread(mActivity, mmSocket);
+    }
+
+    public
+    void setPingRequestMinSize(int sz)
+    {
+        mmPingThread.setmMinCharNr(sz);
+    }
+
+    public
+    void setPingRequestMaxSize(int sz)
+    {
+        mmPingThread.setmMaxCharNr(sz);
     }
 
     @Override
@@ -55,7 +68,6 @@ public class ConnectThread
             sendTransition(R.string.connected_thread_started, false);
 
             // and now, send ping request
-            mmPingThread = new PingThread(mActivity, mmSocket);
             mmPingThread.start();
         }
         catch (IOException connectException)

@@ -13,10 +13,28 @@ public class PingThread
 {
     private final static String TAG = "PingThread";
 
+    private static final int MIN_CHAR_NR = 2;
+    private static final int MAX_CHAR_NR = 16;
+
     private final    BluetoothSocket mSocket;
     private          ConnectedThread mmConnectedThread;
     private          TimeoutThread   mmTimeoutThread;
     public  final    Object          mMonitor;
+
+    public
+    void setmMaxCharNr(int mMaxCharNr)
+    {
+        this.mMaxCharNr = mMaxCharNr;
+    }
+
+    public
+    void setmMinCharNr(int mMinCharNr)
+    {
+        this.mMinCharNr = mMinCharNr;
+    }
+
+    private int mMinCharNr;
+    private int mMaxCharNr;
 
     public PingThread(BluetoothClientServer activity,
                       BluetoothSocket socket)
@@ -24,6 +42,8 @@ public class PingThread
         super(activity);
         mSocket = socket;
         mMonitor = new Object();
+        mMinCharNr = MIN_CHAR_NR;
+        mMaxCharNr = MAX_CHAR_NR;
     }
 
     @Override
@@ -49,19 +69,33 @@ public class PingThread
         super.cancel();
     }
 
+    private
+    int randomNrOfBytes()
+    {
+        return MIN_CHAR_NR + (int)(Math.random() * (float)(mMaxCharNr - mMinCharNr));
+    }
+
+    private
+    void fillRandomBytes(byte[] buf, int bytes)
+    {
+        for (int n = 1; n <= bytes; n++)
+        {
+            buf[n] = (byte) ((Math.random() * ('z' - 'A')) + 'A');
+        }
+    }
+
     @Override
     public
     void run()
     {
         while (mNotEnd)
         {
-            int    bytes  = 2 + (int) (Math.random() * 14.0);
+            int    bytes  = randomNrOfBytes();
             byte[] buffer = new byte[bytes+1];
+            // First byte transmitted is size of buffer
             buffer[0] = (byte)bytes;
-            for (int n = 1; n <= bytes; n++)
-            {
-                buffer[n] = (byte) ((Math.random() * ('z' - 'A')) + 'A');
-            }
+            // Then fill with random bytes
+            fillRandomBytes(buffer, bytes);
 
             mmConnectedThread = new ConnectedThread(mActivity,
                                                     mSocket,
