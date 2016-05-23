@@ -16,7 +16,6 @@ public class AcceptThread
 {
     // Server for the bluetooth socket
     private final BluetoothServerSocket mmServerSocket;
-    private       TimeoutThread         mTimeoutThread;
 
     public AcceptThread(BluetoothClientServer activity)
     {
@@ -29,7 +28,6 @@ public class AcceptThread
         }
         catch (IOException ignored) { }
         mmServerSocket = tmp;
-        mTimeoutThread = new TimeoutThread(activity, 1000, this);
     }
 
     @Override
@@ -100,14 +98,6 @@ public class AcceptThread
                     data.putString("reason", mResources.getString(R.string.accept_thread_timeout));
                     msg.setData(data);
                     msg.sendToTarget();
-                }
-                mTimeoutThread.interrupt();
-                try
-                {
-                    mTimeoutThread.join();
-                }
-                catch (InterruptedException ignored)
-                {
                 }
             }
         }

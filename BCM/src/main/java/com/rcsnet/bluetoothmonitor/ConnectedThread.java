@@ -87,7 +87,7 @@ public class ConnectedThread
                 Message msg;
                 Bundle data;
 
-                if (mSentBuffer == null)
+                if (!isInterrupted() && mSentBuffer == null)
                 {
                     // Transition for server
                     // Server Transition
@@ -103,13 +103,16 @@ public class ConnectedThread
                     mTimeoutThread.start();
                 }
 
-                // Tell UI about data received
-                msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_DATAIN);
-                data = new Bundle();
-                msg.arg1 = bytes;
-                data.putString("datain", new String(bufferReceived));
-                msg.setData(data);
-                msg.sendToTarget();
+                if (!isInterrupted())
+                {
+                    // Tell UI about data received
+                    msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_DATAIN);
+                    data = new Bundle();
+                    msg.arg1 = bytes;
+                    data.putString("datain", new String(bufferReceived));
+                    msg.setData(data);
+                    msg.sendToTarget();
+                }
 
                 // Check data are the ones expected
                 // when we are in the context of a client
@@ -138,13 +141,15 @@ public class ConnectedThread
                 else {
                     try
                     {
+                        mTimeoutThread.cancel();
                         if (!isInterrupted())
                         {
-                            mTimeoutThread.cancel();
-                            try {
+                            try
+                            {
                                 mTimeoutThread.join();
                             }
-                            catch (InterruptedException ignored) {
+                            catch (InterruptedException ignored)
+                            {
                             }
                         }
                         else
