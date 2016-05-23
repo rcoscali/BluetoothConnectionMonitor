@@ -2,8 +2,7 @@ package com.rcsnet.bluetoothmonitor;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.os.Bundle;
-import android.os.Message;
+
 import java.io.IOException;
 
 /**
@@ -37,43 +36,23 @@ public class ConnectThread
     void run()
     {
         // Warn UI thread
-        Message msg  = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
-        Bundle data = new Bundle();
-        msg.arg1 = mActivity.getState();
-        msg.arg2 = BluetoothClientServer.PING_STATE_CONNECTING;
-        data.putString("reason", mResources.getString(R.string.connect_thread_started));
-        msg.setData(data);
-        msg.sendToTarget();
+        sendTransition(R.string.connect_thread_started, false);
 
         // Start real work
         mAdapter.cancelDiscovery();
         try
         {
             // Signal UI thread we are connecting
-            msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_WARN);
-            data = new Bundle();
-            data.putString("msg", mResources.getString(R.string.connect_thread_connecting));
-            msg.setData(data);
-            msg.sendToTarget();
+            sendMessage(R.string.connect_thread_connecting);
 
             // Connection on going
             mmSocket.connect();
 
             // Connection succeed, signal UI thread
-            msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_WARN);
-            data = new Bundle();
-            data.putString("msg", mResources.getString(R.string.connect_thread_connection_succeed));
-            msg.setData(data);
-            msg.sendToTarget();
+            sendMessage(R.string.connect_thread_connection_succeed);
 
             // Warn UI thread and changed state to connected
-            msg  = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
-            data = new Bundle();
-            msg.arg1 = mActivity.getState();
-            msg.arg2 = mActivity.setState(false);
-            data.putString("reason", mResources.getString(R.string.connected_thread_started));
-            msg.setData(data);
-            msg.sendToTarget();
+            sendTransition(R.string.connected_thread_started, false);
 
             // and now, send ping request
             mmPingThread = new PingThread(mActivity, mmSocket);
@@ -84,22 +63,13 @@ public class ConnectThread
             try
             {
                 // Signal UI thread we are not able to connect
-                msg = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_ERROR);
-                data = new Bundle();
-                data.putString("msg", mResources.getString(R.string.connect_thread_io_exception));
-                msg.setData(data);
-                msg.sendToTarget();
+                sendError(R.string.connect_thread_io_exception);
+
                 // Then try to close socket
                 mmSocket.close();
 
                 // Warn UI thread and changed state to connected
-                msg  = mHandler.obtainMessage(BluetoothClientServer.MESSAGE_STATE_TRANSITION);
-                data = new Bundle();
-                msg.arg1 = mActivity.getState();
-                msg.arg2 = mActivity.setState(true);
-                data.putString("reason", mResources.getString(R.string.connected_thread_started));
-                msg.setData(data);
-                msg.sendToTarget();
+                sendTransition(R.string.connected_thread_started, true);
             }
             catch (IOException ignored)
             {

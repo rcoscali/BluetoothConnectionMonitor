@@ -11,15 +11,27 @@ public class TimeoutThread
 {
     private static final String TAG = "TimeoutThread";
     private int    mMillis;
+    private int    mNanos;
     private Thread mToTimeout;
 
+    // Constructor with milliseconds & nanoseconds
     public TimeoutThread(BluetoothClientServer activity,
                          int millis,
+                         int nanos,
                          Thread toTimeout)
     {
         super(activity);
         mMillis = millis;
+        mNanos = nanos;
         mToTimeout = toTimeout;
+    }
+
+    // Milliseconds only constructor
+    public TimeoutThread(BluetoothClientServer activity,
+                         int millis,
+                         Thread toTimeout)
+    {
+        this(activity, millis, 0, toTimeout);
     }
 
     @Override
@@ -31,7 +43,8 @@ public class TimeoutThread
         {
             synchronized (this)
             {
-                wait(mMillis);
+                Log.v(TAG, "Waiting " + mMillis + "ms and " + mNanos + " ns before interrupting thread " + mToTimeout);
+                wait(mMillis, mNanos);
                 Log.v(TAG, "Timeout runs out of time: interrupting ...");
                 mToTimeout.interrupt();
             }
