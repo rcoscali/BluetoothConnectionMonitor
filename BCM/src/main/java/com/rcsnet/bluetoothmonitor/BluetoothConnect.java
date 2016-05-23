@@ -19,8 +19,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.SparseArray;
-import android.view.*;
-import android.widget.*;
+import android.view.ContextMenu;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,11 +51,10 @@ import java.util.List;
 public class BluetoothConnect
         extends AppCompatActivity
 {
-    public static final String TAG = "BluetoothConnect";
+    public static final  String  TAG                           = "BluetoothConnect";
+    public static final  String  PREFS_NAME                    = "BluetoothConnectMonitorPreferences";
     private static final int     REQUEST_CODE_ENABLE_BLUETOOTH = 0;
     private              boolean mScanningDevices              = false;
-    public static final  String  PREFS_NAME                    = "BluetoothConnectMonitorPreferences";
-
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
      * fragments for each of the sections. We use a
@@ -87,31 +100,7 @@ public class BluetoothConnect
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s)
             {
                 if (s.equals("pref_include_known_devices"))
-                {
                     mIncludeKnownDevices = sharedPreferences.getBoolean("pref_include_known_devices", true);
-                }
-                /*
-                if (s.equals("ping_frequency"))
-                {
-
-                }
-                else if (s.equals("ping_timeout"))
-                {
-
-                }
-                else if (s.equals("ping_failure_number"))
-                {
-
-                }
-                else if (s.equals("notifications_new_message_ringtone"))
-                {
-
-                }
-                else if (s.equals("notifications_new_message_vibrate"))
-                {
-
-                }
-                */
             }
         });
     }
@@ -256,6 +245,31 @@ public class BluetoothConnect
         private ProgressBar        mProgressBar;
         private BluetoothAdapter   mBluetoothAdapter;
         private DeviceArrayAdapter mArrayAdapter;
+        private final BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver()
+        {
+            public void onReceive(Context context, Intent intent)
+            {
+                String action = intent.getAction();
+                if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action))
+                {
+                    mProgressBar.setVisibility(View.VISIBLE);
+                    getActivity().invalidateOptionsMenu();
+                    ((BluetoothConnect) getActivity()).setScanningDevices(true);
+                }
+                if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action))
+                {
+                    mProgressBar.setVisibility(View.GONE);
+                    getActivity().invalidateOptionsMenu();
+                    ((BluetoothConnect) getActivity()).setScanningDevices(false);
+                }
+                else if (BluetoothDevice.ACTION_FOUND.equals(action))
+                {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    if (!mArrayAdapter.contains(device))
+                        mArrayAdapter.add(device);
+                }
+            }
+        };
 
         public PlaceholderFragment()
         {
@@ -277,26 +291,21 @@ public class BluetoothConnect
             return fragment;
         }
 
-        public static void setListViewHeightBasedOnChildren(ListView listView) {
-            ListAdapter listAdapter = listView.getAdapter();
-            if (listAdapter == null)
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data)
+        {
+            super.onActivityResult(requestCode, resultCode, data);
+            if (requestCode != REQUEST_CODE_ENABLE_BLUETOOTH)
                 return;
-
-            int desiredWidth = View.MeasureSpec
-                .makeMeasureSpec(listView.getWidth(), View.MeasureSpec.UNSPECIFIED);
-            int totalHeight = 0;
-            View view = null;
-            for (int i = 0; i < listAdapter.getCount(); i++) {
-                view = listAdapter.getView(i, view, listView);
-                if (i == 0)
-                    view.setLayoutParams(new ViewGroup.LayoutParams(desiredWidth, ViewPager.LayoutParams.WRAP_CONTENT));
-
-                view.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
-                totalHeight += view.getMeasuredHeight();
+            if (resultCode == 0)
+                this.getActivity().finish();
+            else
+            {
+                ((DeviceArrayAdapter) mListView.getAdapter()).clear();
+                if (((BluetoothConnect) getActivity()).mIncludeKnownDevices)
+                    addBluetoothKnownDevices();
+                addBluetoothNewDevices();
             }
-            ViewGroup.LayoutParams params = listView.getLayoutParams();
-            params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
-            listView.setLayoutParams(params);
         }
 
         /**
@@ -323,8 +332,7 @@ public class BluetoothConnect
             mListView.setOnTouchListener(new View.OnTouchListener()
             {
                 @Override
-                public
-                boolean onTouch(View v, MotionEvent event)
+                public boolean onTouch(View v, MotionEvent event)
                 {
                     v.getParent().requestDisallowInterceptTouchEvent(true);
                     return false;
@@ -357,7 +365,7 @@ public class BluetoothConnect
             else
             {
                 mTextView.setText(getResources().getString(R.string.section_format,
-                                            mSectionNumber));
+                                                           mSectionNumber));
                 if (!mBluetoothAdapter.isEnabled())
                 {
                     Intent enableBlueTooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -366,13 +374,64 @@ public class BluetoothConnect
                 else
                 {
                     ((DeviceArrayAdapter) mListView.getAdapter()).clear();
-                    if (((BluetoothConnect)getActivity()).mIncludeKnownDevices)
+                    if (((BluetoothConnect) getActivity()).mIncludeKnownDevices)
                         addBluetoothKnownDevices();
                     addBluetoothNewDevices();
                 }
             }
 
             return mRootView;
+        }
+
+        public static void setListViewHeightBasedOnChildren(ListView listView)
+        {
+            ListAdapter listAdapter = listView.getAdapter();
+            if (listAdapter == null)
+                return;
+
+            int desiredWidth = View.MeasureSpec
+                    .makeMeasureSpec(listView.getWidth(), View.MeasureSpec.UNSPECIFIED);
+            int  totalHeight = 0;
+            View view        = null;
+            for (int i = 0; i < listAdapter.getCount(); i++)
+            {
+                view = listAdapter.getView(i, view, listView);
+                if (i == 0)
+                    view.setLayoutParams(new ViewGroup.LayoutParams(desiredWidth, ViewPager.LayoutParams.WRAP_CONTENT));
+
+                view.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
+                totalHeight += view.getMeasuredHeight();
+            }
+            ViewGroup.LayoutParams params = listView.getLayoutParams();
+            params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+            listView.setLayoutParams(params);
+        }
+
+        @Override
+        public void onDestroy()
+        {
+            super.onDestroy();
+            if (mBluetoothAdapter != null)
+                mBluetoothAdapter.cancelDiscovery();
+            getActivity().invalidateOptionsMenu();
+            ((BluetoothConnect) getActivity()).setScanningDevices(false);
+            try
+            {
+                getContext().unregisterReceiver(mBluetoothReceiver);
+            }
+            catch (IllegalArgumentException ignored)
+            {
+            }
+        }
+
+        @Override
+        public void onCreateContextMenu(ContextMenu menu,
+                                        View v,
+                                        ContextMenu.ContextMenuInfo menuInfo)
+        {
+            super.onCreateContextMenu(menu, v, menuInfo);
+            getActivity().getMenuInflater().inflate(R.menu.device_menu,
+                                                    menu);
         }
 
         @Override
@@ -396,59 +455,6 @@ public class BluetoothConnect
             return super.onContextItemSelected(item);
         }
 
-        @Override
-        public void onCreateContextMenu(ContextMenu menu,
-                                        View v,
-                                        ContextMenu.ContextMenuInfo menuInfo)
-        {
-            super.onCreateContextMenu(menu, v, menuInfo);
-            getActivity().getMenuInflater().inflate(R.menu.device_menu,
-                                                    menu);
-        }
-
-        @Override
-        public void onActivityResult(int requestCode, int resultCode, Intent data)
-        {
-            super.onActivityResult(requestCode, resultCode, data);
-            if (requestCode != REQUEST_CODE_ENABLE_BLUETOOTH)
-                return;
-            if (resultCode == 0)
-                this.getActivity().finish();
-            else
-            {
-                ((DeviceArrayAdapter) mListView.getAdapter()).clear();
-                if (((BluetoothConnect)getActivity()).mIncludeKnownDevices)
-                    addBluetoothKnownDevices();
-                addBluetoothNewDevices();
-            }
-        }
-
-        private final BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver()
-        {
-            public void onReceive(Context context, Intent intent)
-            {
-                String action = intent.getAction();
-                if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action))
-                {
-                    mProgressBar.setVisibility(View.VISIBLE);
-                    getActivity().invalidateOptionsMenu();
-                    ((BluetoothConnect) getActivity()).setScanningDevices(true);
-                }
-                if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action))
-                {
-                    mProgressBar.setVisibility(View.GONE);
-                    getActivity().invalidateOptionsMenu();
-                    ((BluetoothConnect) getActivity()).setScanningDevices(false);
-                }
-                else if (BluetoothDevice.ACTION_FOUND.equals(action))
-                {
-                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    if (!mArrayAdapter.contains(device))
-                        mArrayAdapter.add(device);
-                }
-            }
-        };
-
         private void addBluetoothNewDevices()
         {
             Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
@@ -461,23 +467,6 @@ public class BluetoothConnect
             mBluetoothAdapter.startDiscovery();
             getActivity().invalidateOptionsMenu();
             ((BluetoothConnect) getActivity()).setScanningDevices(true);
-        }
-
-        @Override
-        public void onDestroy()
-        {
-            super.onDestroy();
-            if (mBluetoothAdapter != null)
-                mBluetoothAdapter.cancelDiscovery();
-            getActivity().invalidateOptionsMenu();
-            ((BluetoothConnect) getActivity()).setScanningDevices(false);
-            try
-            {
-                getContext().unregisterReceiver(mBluetoothReceiver);
-            }
-            catch(IllegalArgumentException ignored)
-            {
-            }
         }
 
         private void addBluetoothKnownDevices()
@@ -495,26 +484,12 @@ public class BluetoothConnect
         private final List<BluetoothDevice> mDevices;
         private final MenuInflater          mMenuInflater;
 
-        public static class ViewHolder
+        public DeviceArrayAdapter(Context context, BluetoothDevice[] devices)
         {
-            // I added a generic return type to reduce the casting noise in client code
-            @SuppressWarnings("unchecked")
-            public static <T extends View> T get(View view, int id)
-            {
-                SparseArray<View> viewHolder = (SparseArray<View>) view.getTag();
-                if (viewHolder == null)
-                {
-                    viewHolder = new SparseArray<>();
-                    view.setTag(viewHolder);
-                }
-                View childView = viewHolder.get(id);
-                if (childView == null)
-                {
-                    childView = view.findViewById(id);
-                    viewHolder.put(id, childView);
-                }
-                return (T) childView;
-            }
+            this(context);
+
+            Collections.addAll(mDevices, devices);
+            notifyDataSetChanged();
         }
 
         public DeviceArrayAdapter(Context context)
@@ -527,37 +502,25 @@ public class BluetoothConnect
             notifyDataSetChanged();
         }
 
-        public DeviceArrayAdapter(Context context, BluetoothDevice[] devices)
-        {
-            this(context);
-
-            Collections.addAll(mDevices, devices);
-            notifyDataSetChanged();
-        }
-
-        public
-        void add(BluetoothDevice device)
+        public void add(BluetoothDevice device)
         {
             mDevices.add(device);
             notifyDataSetChanged();
         }
 
-        public
-        void addAll(Collection<? extends BluetoothDevice> devices)
+        public void addAll(Collection<? extends BluetoothDevice> devices)
         {
             mDevices.addAll(devices);
             notifyDataSetChanged();
         }
 
-        public
-        void clear()
+        public void clear()
         {
             mDevices.clear();
             notifyDataSetChanged();
         }
 
-        public
-        boolean contains(BluetoothDevice device)
+        public boolean contains(BluetoothDevice device)
         {
             return mDevices.contains(device);
         }
@@ -579,18 +542,6 @@ public class BluetoothConnect
         public long getItemId(int position)
         {
             return mDevices.get(position).hashCode();
-        }
-
-        @Override
-        public boolean isEnabled(int position)
-        {
-            return true;
-        }
-
-        @Override
-        public boolean areAllItemsEnabled()
-        {
-            return true;
         }
 
         @Override
@@ -629,6 +580,40 @@ public class BluetoothConnect
 
             return convertView;
         }
+
+        @Override
+        public boolean areAllItemsEnabled()
+        {
+            return true;
+        }
+
+        @Override
+        public boolean isEnabled(int position)
+        {
+            return true;
+        }
+
+        public static class ViewHolder
+        {
+            // I added a generic return type to reduce the casting noise in client code
+            @SuppressWarnings("unchecked")
+            public static <T extends View> T get(View view, int id)
+            {
+                SparseArray<View> viewHolder = (SparseArray<View>) view.getTag();
+                if (viewHolder == null)
+                {
+                    viewHolder = new SparseArray<>();
+                    view.setTag(viewHolder);
+                }
+                View childView = viewHolder.get(id);
+                if (childView == null)
+                {
+                    childView = view.findViewById(id);
+                    viewHolder.put(id, childView);
+                }
+                return (T) childView;
+            }
+        }
     }
 
     /**
@@ -638,10 +623,10 @@ public class BluetoothConnect
     public class SectionsPagerAdapter
             extends FragmentPagerAdapter
     {
-        private BluetoothConnect mParent;
         private final int STATE_START            = 1;
         private final int STATE_DEVICE_SELECTED  = 2;
         private final int STATE_DEvICE_CONNECTED = 3;
+        private BluetoothConnect mParent;
 
         public SectionsPagerAdapter(FragmentManager fm, BluetoothConnect parent)
         {

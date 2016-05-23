@@ -29,9 +29,12 @@ public class BluetoothClientServer
         extends AppCompatActivity
     implements View.OnClickListener
 {
+    // Name of app
     public final static  String  NAME                             = "BluetoothMonitor";
-    public final static  UUID    MY_UUID                          = UUID.fromString(
-            "86706344-b90c-478e-aa84-ec67f9631031");
+
+    // Universal Unique ID for the service we connect to bluetooth devices
+    public final static UUID MY_UUID = UUID.fromString("86706344-b90c-478e-aa84-ec67f9631031");
+
     // States of the Ping state machine
     public static final  int     PING_STATE_NONE                  = -1;
     public static final  int     PING_STATE_INIT                  = 0;
@@ -44,16 +47,23 @@ public class BluetoothClientServer
     public static final  int     PING_STATE_STOPPED               = 7;
     public static final  int     PING_STATE_LISTENING             = 8;
     public static final  int     PING_STATES_NUMBER               = 9;
+
+    // Id of mode in which the threads are launched
     public static final  int     MODE_CLIENT                      = 1;
     public static final  int     MODE_SERVER                      = 2;
+
+    // Handler messages ids
     public final static  int     MESSAGE_STATE_TRANSITION         = 1;
     public final static  int     MESSAGE_WARN                     = 2;
     public final static  int     MESSAGE_DATAOUT                  = 3;
     public final static  int     MESSAGE_DATAIN                   = 4;
     public final static  int     MESSAGE_ERROR                    = 5;
     public final static  int     MESSAGE_PING_THREAD_STOP         = 6;
+
     // Android log tag
     private static final String  TAG                              = "BluetoothMonitor";
+
+    // Preferences default values
     private static final String  PING_FREQUENCY_DEFAULT           = "1000";
     private static final String  PING_TIMEOUT_DEFAULT             = "1000";
     private static final String  PING_FAILURE_NUMBER_DEFAULT      = "3";
@@ -322,6 +332,13 @@ public class BluetoothClientServer
         return new_state;
     }
 
+    /**
+     * Return the state name for the provided ID
+     *
+     * @param state The ID of the state for which the name is wanted
+     * @return A string containing the name of the state with id state
+     * @throws IndexOutOfBoundsException When state is either less than 0 or higher than 9
+     */
     public String getStateName(int state)
             throws IndexOutOfBoundsException
     {
@@ -421,46 +438,43 @@ public class BluetoothClientServer
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
                 switch (s)
                 {
+                // Preference for control of ping frequency (actually period)
                 case "ping_frequency":
                     String ping_frequency_str = sharedPreferences.getString("ping_frequency", PING_FREQUENCY_DEFAULT);
                     mPingFrequency = Integer.getInteger(ping_frequency_str);
                     break;
+                // Preference for controling ping timeout
                 case "ping_timeout":
                     String ping_timeout_str = sharedPreferences.getString("ping_timeout", PING_TIMEOUT_DEFAULT);
                     mPingTimeout = Integer.getInteger(ping_timeout_str);
                     break;
+                // Preference for setting number of failure before raising alarm
                 case "ping_failure_number":
                     String ping_failure_number_str = sharedPreferences.getString("ping_failure_number",
                                                                                  PING_FAILURE_NUMBER_DEFAULT);
                     mPingFailureNumber = Integer.getInteger(ping_failure_number_str);
                     break;
+                // Preference controlling Minimum number of bytes in ping request
                 case "ping_request_min_char_number":
                     mPingRequestMinCharNr = sharedPreferences.getInt("ping_request_min_char_number",
                                                                      PING_REQUEST_MIN_CHAR_NR_DEFAULT);
                     break;
+                // Preference for controlling maximum number of bytes in ping request
                 case "ping_request_max_char_number":
                     mPingRequestMaxCharNr = sharedPreferences.getInt("ping_request_max_char_number",
                                                                      PING_REQUEST_MAX_CHAR_NR_DEFAULT);
                     break;
                 }
-                /*
-                if (s.equals("pref_include_known_devices"))
-                {
-                    mIncludeKnownDevices = sharedPreferences.getBoolean("pref_include_known_devices", true);
-                }
-                else if (s.equals("notifications_new_message_ringtone"))
-                {
-
-                }
-                else if (s.equals("notifications_new_message_vibrate"))
-                {
-
-                }
-                */
             }
         });
     }
 
+    /**
+     * Send a message display request to the UI main thread (main application thread)
+     * Takes as a parameter the resource id of the string to display
+     *
+     * @param resid Identifier of the string to display as message
+     */
     private void sendStateMessage(int resid) {
         String msg = String.format(getResources().getString(R.string.state_message_format),
                 mMsgNr++,
@@ -470,6 +484,12 @@ public class BluetoothClientServer
         mStateText.append(msg);
     }
 
+    /**
+     * Send a message display request to the UI main thread (main application thread)
+     * Takes as a parameter the string to display
+     *
+     * @param str String to display
+     */
     private void sendStateMessage(String str) {
         String msg = String.format(getResources().getString(R.string.state_message_format), mMsgNr++,
                 PING_STATE_NAMES[mCurPingState], str);
