@@ -49,7 +49,10 @@ public class ConnectThread
     void run()
     {
         // Warn UI thread
-        sendTransition(R.string.connect_thread_started, false);
+        sendTransition(BluetoothClientServer.PING_STATE_NONE,
+                       BluetoothClientServer.PING_STATE_NONE,
+                       R.string.connect_thread_started,
+                       false);
 
         // Start real work
         mAdapter.cancelDiscovery();
@@ -65,7 +68,10 @@ public class ConnectThread
             sendMessage(R.string.connect_thread_connection_succeed);
 
             // Warn UI thread and changed state to connected
-            sendTransition(R.string.connected_thread_started, false);
+            sendTransition(BluetoothClientServer.PING_STATE_NONE,
+                           BluetoothClientServer.PING_STATE_NONE,
+                           R.string.connected_thread_started,
+                           false);
 
             // and now, send ping request
             mmPingThread.start();
@@ -81,7 +87,10 @@ public class ConnectThread
                 mmSocket.close();
 
                 // Warn UI thread and changed state to connected
-                sendTransition(R.string.connected_thread_started, true);
+                sendTransition(BluetoothClientServer.PING_STATE_NONE,
+                               BluetoothClientServer.PING_STATE_NONE,
+                               R.string.connected_thread_started,
+                               true);
             }
             catch (IOException ignored)
             {

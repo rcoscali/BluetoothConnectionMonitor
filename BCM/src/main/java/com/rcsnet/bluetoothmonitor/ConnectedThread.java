@@ -2,6 +2,7 @@ package com.rcsnet.bluetoothmonitor;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothSocket;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,6 +23,13 @@ public class ConnectedThread
     private final byte[]          mSentBuffer;
     private final Object          mMonitor;
     private       TimeoutThread   mTimeoutThread;
+
+    public ConnectedThread(BluetoothClientServer activity,
+                           BluetoothSocket socket)
+    {
+        // Call default constructor
+        this(activity, socket, null, new Object());
+    }
 
     public ConnectedThread(BluetoothClientServer activity,
                            BluetoothSocket socket,
@@ -52,13 +60,6 @@ public class ConnectedThread
         mmOutStream = tmpOut;
     }
 
-    public ConnectedThread(BluetoothClientServer activity,
-                           BluetoothSocket socket)
-    {
-        // Call default constructor
-        this(activity, socket, null, new Object());
-    }
-
     @SuppressLint("Assert")
     @Override
     public
@@ -70,8 +71,8 @@ public class ConnectedThread
             byte[] buffer;  // buffer store for the stream
             int    bytes;   // bytes returned from read()
             byte[] size;    // Buffer for reading size from stream
-            int    sizesize;
-            int    bufsize;
+            int    sizeOfSize;
+            int    bufSize;
             byte[] bufferReceived;
 
             synchronized(mMonitor)
@@ -85,27 +86,36 @@ public class ConnectedThread
                 mTimeoutThread.start();
 
                 // Read from the InputStream
-                sizesize = mmInStream.read(size);
-                assert (sizesize == 1);
+                sizeOfSize = mmInStream.read(size);
+                assert (sizeOfSize == 1);
                 bytes = size[0];
-                bufsize = mmInStream.read(buffer, 0, bytes);
-                assert (bufsize == bytes);
+                bufSize = mmInStream.read(buffer, 0, bytes);
+                assert (bufSize == bytes);
 
                 // Thread interrupted & joined in cancel
                 mTimeoutThread.cancel();
 
                 bufferReceived = Arrays.copyOf(buffer, bytes);
 
-                if (!isInterrupted() && mSentBuffer == null)
-                    // Transition for server
-                    sendTransition(R.string.connected_thread_data_received, false);
 
                 if (!isInterrupted())
+                {
+                    if (mSentBuffer == null)
+                        // Transition for server
+                        sendTransition(BluetoothClientServer.PING_STATE_LISTENING,
+                                       BluetoothClientServer.PING_STATE_ACKNOWLEDGED,
+                                       R.string.connected_thread_data_received,
+                                       false);
+
                     // Tell UI about data received
                     sendDataInOutMessage(true, bufferReceived, bytes);
+                }
                 else
                 {
-                    sendTransition(R.string.connected_thread_data_timeout, true);
+                    sendTransition(BluetoothClientServer.PING_STATE_REQUESTED,
+                                   BluetoothClientServer.PING_STATE_NONE,
+                                   R.string.connected_thread_data_timeout,
+                                   true);
                     break;
                 }
 
@@ -114,9 +124,15 @@ public class ConnectedThread
                 if (mSentBuffer != null)
                 {
                     if (Arrays.equals(bufferReceived, mSentBuffer))
-                        sendTransition(R.string.connected_thread_data_acknowledge, false);
+                        sendTransition(BluetoothClientServer.PING_STATE_REQUESTED,
+                                       BluetoothClientServer.PING_STATE_ACKNOWLEDGED,
+                                       R.string.connected_thread_data_acknowledge,
+                                       false);
                     else
-                        sendTransition(R.string.connected_thread_invalid_data_received, true);
+                        sendTransition(BluetoothClientServer.PING_STATE_REQUESTED,
+                                       BluetoothClientServer.PING_STATE_NONE,
+                                       R.string.connected_thread_invalid_data_received,
+                                       true);
 
                     mNotEnd = false;  // Client stop
                 }
@@ -130,21 +146,42 @@ public class ConnectedThread
                         mmOutStream.write(Arrays.copyOf(buffer, bytes));
 
                         // Server Transition & Tell UI about data received
-                        sendTransition(R.string.connected_thread_data_acknowledge, false);
+                        sendTransition(BluetoothClientServer.PING_STATE_REQUESTED,
+                                       BluetoothClientServer.PING_STATE_ACKNOWLEDGED,
+                                       R.string.connected_thread_data_acknowledge,
+                                       false);
                         sendDataInOutMessage(false, buffer, bytes);
                     }
                     catch (IOException e)
                     {
                         mNotEnd = false;
-                        sendTransition(R.string.connected_thread_io_exception, true);
+                        sendTransition(BluetoothClientServer.PING_STATE_REQUESTED,
+                                       BluetoothClientServer.PING_STATE_NONE,
+                                       R.string.connected_thread_io_exception,
+                                       true);
                     }
                 }
             }
         }
         catch (IOException e)
         {
-            sendTransition(R.string.connected_thread_io_exception, true);
+            sendTransition(BluetoothClientServer.PING_STATE_NONE,
+                           BluetoothClientServer.PING_STATE_NONE,
+                           R.string.connected_thread_io_exception,
+                           true);
         }
+    }
+
+    /* Call this from the main activity to shutdown the connection */
+    @Override
+    public void cancel()
+    {
+        try
+        {
+            mmSocket.close();
+        }
+        catch (IOException ignored) { }
+        super.cancel();
     }
 
     /* Call this from the main activity to send data to the remote device */
@@ -156,18 +193,5 @@ public class ConnectedThread
             mmOutStream.write(bytes);
         }
         catch (IOException ignored) { }
-    }
-
-    /* Call this from the main activity to shutdown the connection */
-    @Override
-    public
-    void cancel()
-    {
-        try
-        {
-            mmSocket.close();
-        }
-        catch (IOException ignored) { }
-        super.cancel();
     }
 }

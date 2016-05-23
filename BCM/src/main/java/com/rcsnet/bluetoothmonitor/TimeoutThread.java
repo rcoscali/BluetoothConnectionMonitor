@@ -10,9 +10,17 @@ public class TimeoutThread
         extends ConnectionManagement
 {
     private static final String TAG = "TimeoutThread";
-    private int    mMillis;
-    private int    mNanos;
-    private Thread mToTimeout;
+    private final Thread mToTimeout;
+    private       int    mMillis;
+    private       int    mNanos;
+
+    // Milliseconds only constructor
+    public TimeoutThread(BluetoothClientServer activity,
+                         int millis,
+                         Thread toTimeout)
+    {
+        this(activity, millis, 0, toTimeout);
+    }
 
     // Constructor with milliseconds & nanoseconds
     public TimeoutThread(BluetoothClientServer activity,
@@ -26,14 +34,6 @@ public class TimeoutThread
         mToTimeout = toTimeout;
     }
 
-    // Milliseconds only constructor
-    public TimeoutThread(BluetoothClientServer activity,
-                         int millis,
-                         Thread toTimeout)
-    {
-        this(activity, millis, 0, toTimeout);
-    }
-
     @Override
     public
     void run()
@@ -41,7 +41,7 @@ public class TimeoutThread
         Log.v(TAG, "Running TimeOut Thread");
         try
         {
-            synchronized (this)
+            synchronized (mToTimeout)
             {
                 Log.v(TAG, "Waiting " + mMillis + "ms and " + mNanos + " ns before interrupting thread " + mToTimeout);
                 wait(mMillis, mNanos);

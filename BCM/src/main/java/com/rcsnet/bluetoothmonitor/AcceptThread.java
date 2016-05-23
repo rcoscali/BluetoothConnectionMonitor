@@ -40,7 +40,10 @@ public class AcceptThread
         {
             try
             {
-                sendTransition(R.string.accept_thread_accepting_data, false);
+                sendTransition(BluetoothClientServer.PING_STATE_INIT,
+                               BluetoothClientServer.PING_STATE_LISTENING,
+                               R.string.accept_thread_accepting_data,
+                               false);
 
                 // Wait for incoming data ...
                 socket = mmServerSocket.accept();
@@ -67,7 +70,10 @@ public class AcceptThread
                 catch (InterruptedException ie)
                 {
                     // Transition for server
-                    sendTransition(R.string.accept_thread_timeout, true);
+                    sendTransition(BluetoothClientServer.PING_STATE_LISTENING,
+                                   BluetoothClientServer.PING_STATE_NONE,
+                                   R.string.accept_thread_timeout,
+                                   true);
                 }
             }
         }
