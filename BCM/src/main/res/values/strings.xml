@@ -91,16 +91,16 @@
     <string name="accept_thread_accepting_data">Accept Thread accepting data …</string>
     <string name="accept_thread_data_received">Accept Thread: data received</string>
     <string name="accept_thread_io_exception">Accept Thread: I/O Exception</string>
-    <string name="connect_thread_started" >Connect Thread Started </string>
-    <string name="connect_thread_connecting" >Connect Thread: Connecting …</string>
-    <string name="connect_thread_connection_succeed" >Connect Thread: Connection Succeed</string>
-    <string name="connect_thread_io_exception" >Connect Thread: I/O Exception</string>
-    <string name="connected_thread_started" >Connected Thread: Started</string>
-    <string name="connected_thread_data_acknowledge" >Connected Thread: Ping Response Received</string>
-    <string name="connected_thread_invalid_data_received" >Connected Thread: Invalid Ping Response</string>
-    <string name="connected_thread_io_exception" >Connected Thread: I/O Exception</string>
-    <string name="ping_thread_send_request" >Ping Thread: Sending Ping Request</string>
-    <string name="starting" >Bluetooth Client/Server Activity starting …</string>
+    <string name="connect_thread_started">Connect Thread Started </string>
+    <string name="connect_thread_connecting">Connect Thread: Connecting …</string>
+    <string name="connect_thread_connection_succeed">Connect Thread: Connection Succeed</string>
+    <string name="connect_thread_io_exception">Connect Thread: I/O Exception</string>
+    <string name="connected_thread_started">Connected Thread: Started</string>
+    <string name="connected_thread_data_acknowledge">Connected Thread: Ping Response Received</string>
+    <string name="connected_thread_invalid_data_received">Connected Thread: Invalid Ping Response</string>
+    <string name="connected_thread_io_exception">Connected Thread: I/O Exception</string>
+    <string name="ping_thread_send_request">Ping Thread: Sending Ping Request</string>
+    <string name="starting">Bluetooth Client/Server Activity starting …</string>
     <string name="alarm_image">Alarm image</string>
     <string name="no_bluetooth_device">No bluetooth device</string>
     <string name="bytes_of_data_sent">%1$d bytes of data sent: \'%2$s\'</string>
@@ -116,4 +116,5 @@
     <string name="connected_thread_data_timeout">Connected Thread: Timeout While Receiving Data</string>
     <string name="ping_request_min_char_number">Ping Request Minimum Size</string>
     <string name="ping_request_max_char_number">Ping Request Maximum Size</string>
+    <string name="title_activity_timeout_test">TimeoutTestActivity</string>
 </resources>
