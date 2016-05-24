@@ -1,13 +1,18 @@
 package com.rcsnet.bluetoothmonitor;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.AssetFileDescriptor;
 import android.media.MediaPlayer;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Vibrator;
+import android.preference.PreferenceManager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -35,10 +40,29 @@ public class ConnectionLostAlarm
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
-    private static final int     UI_ANIMATION_DELAY = 300;
-    private final        Handler mHideHandler       = new Handler();
+    private static final int                  UI_ANIMATION_DELAY      = 300;
+    private static final Boolean              VIBRATE_DEFAULT         = false;
+    private static final String               RINGTONE_DEFAULT        = "content://settings/system/notification_sound";
+    private final        Handler              mHideHandler            = new Handler();
+    /**
+     * Touch listener to use for in-layout UI controls to delay hiding the
+     * system UI. This is to prevent the jarring behavior of controls going away
+     * while interacting with activity UI.
+     */
+    private final        View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener()
+    {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent)
+        {
+            if (AUTO_HIDE)
+            {
+                delayedHide(AUTO_HIDE_DELAY_MILLIS);
+            }
+            return false;
+        }
+    };
     private View mContentView;
-    private final Runnable    mHidePart2Runnable = new Runnable()
+    private final Runnable mHidePart2Runnable = new Runnable()
     {
         @SuppressLint("InlinedApi")
         @Override
@@ -83,25 +107,8 @@ public class ConnectionLostAlarm
         }
     };
     private SharedPreferences mSettings;
-
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    private final View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener()
-    {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent)
-        {
-            if (AUTO_HIDE)
-            {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-            }
-            return false;
-        }
-    };
-
+    private       Uri                  mRingtoneUri   = null;
+    private       Ringtone             mRingtone      = null;
     /**
      * Click listener to use for in-layout UI controls to hide the
      * system UI.
@@ -111,9 +118,36 @@ public class ConnectionLostAlarm
         @Override
         public void onClick(View v)
         {
-            mMediaPlayer.stop();
-            mMediaPlayer.release();
+            if (mMediaPlayer != null)
+            {
+                mMediaPlayer.stop();
+                mMediaPlayer.release();
+            }
+            if (mRingtone != null)
+                mRingtone.stop();
+            ((Vibrator) getSystemService(Context.VIBRATOR_SERVICE)).cancel();
             finish();
+        }
+    };
+    private boolean mVibrate;
+    private SharedPreferences.OnSharedPreferenceChangeListener mSettingsChangeLsnr =
+            new SharedPreferences.OnSharedPreferenceChangeListener()
+            {
+                @Override
+                public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s)
+                {
+                    switch (s)
+                    {
+                    // Preference for control of ping frequency (actually period)
+                    case "notifications_new_message_ringtone":
+                        String ringtone_str = sharedPreferences.getString("notifications_new_message_ringtone", RINGTONE_DEFAULT);
+                        mRingtoneUri = Uri.parse(ringtone_str);
+                        break;
+                    // Preference for controling ping timeout
+                    case "notifications_new_message_vibrate":
+                        mVibrate = sharedPreferences.getBoolean("notifications_new_message_vibrate", VIBRATE_DEFAULT);
+                        break;
+                    }
         }
     };
 
@@ -127,18 +161,6 @@ public class ConnectionLostAlarm
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
-        AssetFileDescriptor afd = null;
-
-        mMediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.alarm);
-        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener()
-        {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer)
-            {
-                mediaPlayer.start();
-            }
-        });
-        mMediaPlayer.start();
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener()
@@ -157,7 +179,37 @@ public class ConnectionLostAlarm
         findViewById(R.id.dismiss_button).setOnClickListener(mClickListener);
 
         // Preferences
-        mSettings = getSharedPreferences(BluetoothConnect.PREFS_NAME, MODE_PRIVATE);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_notification, false);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_data_sync, false);
+        mSettings = PreferenceManager.getDefaultSharedPreferences(this);
+        //mSettings = getSharedPreferences(BluetoothConnect.PREFS_NAME, MODE_PRIVATE);
+        mRingtoneUri = Uri.parse(mSettings.getString("notifications_new_message_ringtone", RINGTONE_DEFAULT));
+        mVibrate = mSettings.getBoolean("notifications_new_message_vibrate", VIBRATE_DEFAULT);
+        mSettings.registerOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
+
+        Uri defaultSound = Uri.parse(RINGTONE_DEFAULT);
+        if (!mRingtoneUri.equals(defaultSound))
+        {
+            mRingtone = RingtoneManager.getRingtone(getApplicationContext(), mRingtoneUri);
+            mRingtone.play();
+        }
+        else
+        {
+            mMediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.alarm);
+            mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener()
+            {
+                @Override
+                public void onCompletion(MediaPlayer mediaPlayer)
+                {
+                    mediaPlayer.start();
+                }
+            });
+            mMediaPlayer.start();
+        }
+
+        if (mVibrate)
+            ((Vibrator) getSystemService(Context.VIBRATOR_SERVICE)).vibrate(new long[]{0, 100, 100}, 0);
     }
 
     @Override
@@ -169,6 +221,16 @@ public class ConnectionLostAlarm
         // created, to briefly hint to the user that UI controls
         // are available.
         delayedHide(100);
+    }
+
+    /**
+     * Schedules a call to hide() in [delay] milliseconds, canceling any
+     * previously scheduled calls.
+     */
+    private void delayedHide(int delayMillis)
+    {
+        mHideHandler.removeCallbacks(mHideRunnable);
+        mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
 
     private void toggle()
@@ -207,13 +269,17 @@ public class ConnectionLostAlarm
         mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
     }
 
-    /**
-     * Schedules a call to hide() in [delay] milliseconds, canceling any
-     * previously scheduled calls.
-     */
-    private void delayedHide(int delayMillis)
+    @Override
+    protected void onPause()
     {
-        mHideHandler.removeCallbacks(mHideRunnable);
-        mHideHandler.postDelayed(mHideRunnable, delayMillis);
+        super.onPause();
+        mSettings.unregisterOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        mSettings.registerOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
     }
 }

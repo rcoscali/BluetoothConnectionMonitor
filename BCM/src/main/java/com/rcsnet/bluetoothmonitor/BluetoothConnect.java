@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -72,6 +73,16 @@ public class BluetoothConnect
      * The {@link ViewPager} that will host the section contents.
      */
     private ViewPager mViewPager;
+    private SharedPreferences.OnSharedPreferenceChangeListener mSettingsChangeLsnr =
+            new SharedPreferences.OnSharedPreferenceChangeListener()
+            {
+                @Override
+                public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s)
+                {
+                    if (s.equals("pref_include_known_devices"))
+                        mIncludeKnownDevices = sharedPreferences.getBoolean("pref_include_known_devices", true);
+                }
+            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -91,18 +102,13 @@ public class BluetoothConnect
             mViewPager.setAdapter(mSectionsPagerAdapter);
 
         // Preferences
-        mSettings = getPreferences(MODE_PRIVATE);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_notification, false);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_data_sync, false);
+        mSettings = PreferenceManager.getDefaultSharedPreferences(this);
+        //mSettings = getSharedPreferences(BluetoothConnect.PREFS_NAME, MODE_PRIVATE);
         mIncludeKnownDevices = mSettings.getBoolean("pref_include_known_devices", true);
-
-        mSettings.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener()
-        {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s)
-            {
-                if (s.equals("pref_include_known_devices"))
-                    mIncludeKnownDevices = sharedPreferences.getBoolean("pref_include_known_devices", true);
-            }
-        });
+        mSettings.registerOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
     }
 
     /**
@@ -121,6 +127,20 @@ public class BluetoothConnect
             return;
         if (resultCode != RESULT_OK)
             finish();
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        mSettings.unregisterOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        mSettings.registerOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
     }
 
     /**

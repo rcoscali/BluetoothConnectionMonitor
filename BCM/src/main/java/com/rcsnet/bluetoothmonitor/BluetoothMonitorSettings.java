@@ -12,13 +12,13 @@ import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
+import android.support.v4.app.NavUtils;
+import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.view.MenuItem;
-import android.support.v4.app.NavUtils;
 
 import java.util.List;
 
@@ -104,16 +104,6 @@ public class BluetoothMonitorSettings
             };
 
     /**
-     * Helper method to determine if the device has an extra-large screen. For
-     * example, 10" tablets are extra-large.
-     */
-    private static boolean isXLargeTablet(Context context)
-    {
-        return (context.getResources().getConfiguration().screenLayout
-                & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
-    }
-
-    /**
      * Binds a preference's summary to its value. More specifically, when the
      * preference's value is changed, its summary (line of text below the
      * preference title) is updated to reflect the value. The summary is also
@@ -133,13 +123,13 @@ public class BluetoothMonitorSettings
             preference.getKey().equals("notifications_new_message_vibrate"))
             sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
                                                                      PreferenceManager
-                                                                         .getDefaultSharedPreferences(preference.getContext())
-                                                                         .getBoolean(preference.getKey(), true));
+                                                                             .getDefaultSharedPreferences(preference.getContext())
+                                                                             .getBoolean(preference.getKey(), true));
         else
             sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
                                                                      PreferenceManager
-                                                                     .getDefaultSharedPreferences(preference.getContext())
-                                                                     .getString(preference.getKey(), ""));
+                                                                             .getDefaultSharedPreferences(preference.getContext())
+                                                                             .getString(preference.getKey(), ""));
     }
 
     @Override
@@ -187,6 +177,16 @@ public class BluetoothMonitorSettings
     }
 
     /**
+     * Helper method to determine if the device has an extra-large screen. For
+     * example, 10" tablets are extra-large.
+     */
+    private static boolean isXLargeTablet(Context context)
+    {
+        return (context.getResources().getConfiguration().screenLayout
+                & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -223,11 +223,9 @@ public class BluetoothMonitorSettings
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
             bindPreferenceSummaryToValue(findPreference("pref_include_known_devices"));
+            bindPreferenceSummaryToValue(findPreference("ping_request_min_char_number"));
+            bindPreferenceSummaryToValue(findPreference("ping_request_max_char_number"));
         }
 
         @Override
@@ -258,10 +256,6 @@ public class BluetoothMonitorSettings
             addPreferencesFromResource(R.xml.pref_notification);
             setHasOptionsMenu(true);
 
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
             bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
             bindPreferenceSummaryToValue(findPreference("notifications_new_message_vibrate"));
         }
@@ -294,10 +288,6 @@ public class BluetoothMonitorSettings
             addPreferencesFromResource(R.xml.pref_data_sync);
             setHasOptionsMenu(true);
 
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
             bindPreferenceSummaryToValue(findPreference("ping_frequency"));
             bindPreferenceSummaryToValue(findPreference("ping_timeout"));
             bindPreferenceSummaryToValue(findPreference("ping_failure_number"));

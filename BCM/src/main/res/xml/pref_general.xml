@@ -3,18 +3,22 @@
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
     <SwitchPreference
-        android:key="pref_include_known_devices"
         android:defaultValue="false"
+        android:key="pref_include_known_devices"
         android:title="@string/title_pref_include_known_devices"/>
 
     <EditTextPreference
-        android:key="ping_request_min_char_number"
         android:defaultValue="2"
+        android:digits="0123456789"
+        android:inputType="number"
+        android:key="ping_request_min_char_number"
         android:title="@string/ping_request_min_char_number"/>
 
     <EditTextPreference
-        android:key="ping_request_max_char_number"
         android:defaultValue="16"
+        android:digits="0123456789"
+        android:inputType="number"
+        android:key="ping_request_max_char_number"
         android:title="@string/ping_request_max_char_number"/>
 
 </PreferenceScreen>

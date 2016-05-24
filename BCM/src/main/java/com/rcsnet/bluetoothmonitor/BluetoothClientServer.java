@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -85,6 +86,24 @@ public class BluetoothClientServer
      */
     private static final int     UI_ANIMATION_DELAY               = 300;
     private final        Handler mHideHandler                     = new Handler();
+    /**
+     * Touch listener to use for in-layout UI controls to delay hiding the
+     * system UI. This is to prevent the jarring behavior of controls going away
+     * while interacting with activity UI.
+     */
+    private final        View.OnTouchListener
+            mDelayHideTouchListener                               = new View.OnTouchListener()
+    {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent)
+        {
+            if (AUTO_HIDE)
+            {
+                delayedHide(AUTO_HIDE_DELAY_MILLIS);
+            }
+            return false;
+        }
+    };
     public  String            PING_STATE_NAMES[];
     private int               mPingTimeout;
     private int               mPingRequestMinCharNr;
@@ -138,23 +157,6 @@ public class BluetoothClientServer
         @Override
         public void run() {
             hide();
-        }
-    };
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    private final View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener()
-    {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent)
-        {
-            if (AUTO_HIDE)
-            {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-            }
-            return false;
         }
     };
     private BluetoothDevice mDevice;
@@ -229,6 +231,43 @@ public class BluetoothClientServer
         }
     };
     private boolean mLocal;
+    private SharedPreferences.OnSharedPreferenceChangeListener mSettingsChangeLsnr =
+            new SharedPreferences.OnSharedPreferenceChangeListener()
+            {
+                @Override
+                public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s)
+                {
+                    switch (s)
+                    {
+                    // Preference for control of ping frequency (actually period)
+                    case "ping_frequency":
+                        String ping_frequency_str = sharedPreferences.getString("ping_frequency", PING_FREQUENCY_DEFAULT);
+                        mPingFrequency = Integer.getInteger(ping_frequency_str);
+                        break;
+                    // Preference for controling ping timeout
+                    case "ping_timeout":
+                        String ping_timeout_str = sharedPreferences.getString("ping_timeout", PING_TIMEOUT_DEFAULT);
+                        mPingTimeout = Integer.getInteger(ping_timeout_str);
+                        break;
+                    // Preference for setting number of failure before raising alarm
+                    case "ping_failure_number":
+                        String ping_failure_number_str = sharedPreferences.getString("ping_failure_number",
+                                                                                     PING_FAILURE_NUMBER_DEFAULT);
+                        mPingFailureNumber = Integer.getInteger(ping_failure_number_str);
+                        break;
+                    // Preference controlling Minimum number of bytes in ping request
+                    case "ping_request_min_char_number":
+                        mPingRequestMinCharNr = sharedPreferences.getInt("ping_request_min_char_number",
+                                                                         PING_REQUEST_MIN_CHAR_NR_DEFAULT);
+                        break;
+                    // Preference for controlling maximum number of bytes in ping request
+                    case "ping_request_max_char_number":
+                        mPingRequestMaxCharNr = sharedPreferences.getInt("ping_request_max_char_number",
+                                                                         PING_REQUEST_MAX_CHAR_NR_DEFAULT);
+                        break;
+                    }
+                }
+            };
 
     public BluetoothClientServer()
     {
@@ -427,46 +466,17 @@ public class BluetoothClientServer
         }
 
         // Preferences
-        mSettings = getPreferences(MODE_PRIVATE);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_notification, false);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_data_sync, false);
+        mSettings = PreferenceManager.getDefaultSharedPreferences(this);
+        //mSettings = getSharedPreferences(BluetoothConnect.PREFS_NAME, MODE_PRIVATE);
         mPingFrequency = Integer.parseInt(mSettings.getString("ping_frequency", "1000"));
         mPingTimeout = Integer.parseInt(mSettings.getString("ping_timeout", "1000"));
         mPingFailureNumber = Integer.parseInt(mSettings.getString("ping_failure_number", "3"));
         mPingRequestMinCharNr = mSettings.getInt("ping_request_min_char_number", PING_REQUEST_MIN_CHAR_NR_DEFAULT);
         mPingRequestMaxCharNr = mSettings.getInt("ping_request_max_char_number", PING_REQUEST_MAX_CHAR_NR_DEFAULT);
-        mSettings.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-                switch (s)
-                {
-                // Preference for control of ping frequency (actually period)
-                case "ping_frequency":
-                    String ping_frequency_str = sharedPreferences.getString("ping_frequency", PING_FREQUENCY_DEFAULT);
-                    mPingFrequency = Integer.getInteger(ping_frequency_str);
-                    break;
-                // Preference for controling ping timeout
-                case "ping_timeout":
-                    String ping_timeout_str = sharedPreferences.getString("ping_timeout", PING_TIMEOUT_DEFAULT);
-                    mPingTimeout = Integer.getInteger(ping_timeout_str);
-                    break;
-                // Preference for setting number of failure before raising alarm
-                case "ping_failure_number":
-                    String ping_failure_number_str = sharedPreferences.getString("ping_failure_number",
-                                                                                 PING_FAILURE_NUMBER_DEFAULT);
-                    mPingFailureNumber = Integer.getInteger(ping_failure_number_str);
-                    break;
-                // Preference controlling Minimum number of bytes in ping request
-                case "ping_request_min_char_number":
-                    mPingRequestMinCharNr = sharedPreferences.getInt("ping_request_min_char_number",
-                                                                     PING_REQUEST_MIN_CHAR_NR_DEFAULT);
-                    break;
-                // Preference for controlling maximum number of bytes in ping request
-                case "ping_request_max_char_number":
-                    mPingRequestMaxCharNr = sharedPreferences.getInt("ping_request_max_char_number",
-                                                                     PING_REQUEST_MAX_CHAR_NR_DEFAULT);
-                    break;
-                }
-            }
-        });
+        mSettings.registerOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
     }
 
     /**
@@ -475,11 +485,12 @@ public class BluetoothClientServer
      *
      * @param resid Identifier of the string to display as message
      */
-    private void sendStateMessage(int resid) {
+    private void sendStateMessage(int resid)
+    {
         String msg = String.format(getResources().getString(R.string.state_message_format),
-                mMsgNr++,
-                PING_STATE_NAMES[mCurPingState],
-                getResources().getText(resid));
+                                   mMsgNr++,
+                                   PING_STATE_NAMES[mCurPingState],
+                                   getResources().getText(resid));
         Log.v(TAG, msg);
         mStateText.append(msg);
     }
@@ -490,9 +501,10 @@ public class BluetoothClientServer
      *
      * @param str String to display
      */
-    private void sendStateMessage(String str) {
+    private void sendStateMessage(String str)
+    {
         String msg = String.format(getResources().getString(R.string.state_message_format), mMsgNr++,
-                PING_STATE_NAMES[mCurPingState], str);
+                                   PING_STATE_NAMES[mCurPingState], str);
         Log.v(TAG, msg);
         mStateText.append(msg);
     }
@@ -546,15 +558,30 @@ public class BluetoothClientServer
     }
 
     @SuppressLint("InlinedApi")
-    private void show() {
+    private void show()
+    {
         // Show the system bar
         mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+                                           | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         mVisible = true;
 
         // Schedule a runnable to display UI elements after a delay
         mHideHandler.removeCallbacks(mHidePart2Runnable);
         if (AUTO_HIDE) mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        mSettings.unregisterOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        mSettings.registerOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
     }
 
     private void sendErrorMessage(String str)
