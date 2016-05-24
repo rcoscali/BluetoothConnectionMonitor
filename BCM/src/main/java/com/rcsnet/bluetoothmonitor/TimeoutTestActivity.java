@@ -24,8 +24,8 @@ public class TimeoutTestActivity
     private TextView mmTimeoutTimeText;
     private TextView mmMainTimeText;
     private Button   mmStartButton;
-    private int      mmMainTime;
-    private int      mmTimeoutTime;
+    private int mmMainTime    = 1;
+    private int mmTimeoutTime = 1;
     private TextView mmTimeoutThreadStatusText;
     private TextView mmMainThreadStatusText;
 
@@ -38,7 +38,7 @@ public class TimeoutTestActivity
         mmTimeoutTimeSeekBarView = (SeekBar) findViewById(R.id.timeout_time_seek);
         mmTimeoutTimeSeekBarView.setMax(99);
         mmTimeoutTimeText = (TextView) findViewById(R.id.timeout_time);
-        mmTimeoutThreadStatusText = (TextView) findViewById(R.id.main_thread_status);
+        mmTimeoutThreadStatusText = (TextView) findViewById(R.id.timeout_thread_status);
         mmTimeoutTimeSeekBarView.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
         {
             @Override
