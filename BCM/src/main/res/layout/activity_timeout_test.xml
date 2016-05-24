@@ -49,9 +49,9 @@
         android:id="@+id/start_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/timeout_thread_status"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="136dp"
+        android:layout_above="@+id/countdown_text"
+        android:layout_alignEnd="@+id/timeout_thread_status"
+        android:layout_marginBottom="111dp"
         android:text="Start"/>
 
     <SeekBar
@@ -109,5 +109,31 @@
         android:layout_toStartOf="@+id/timeout_time_seek"
         android:text="1s"
         android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+    <TextView
+        android:id="@+id/countdown_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="New Text"/>
+
+    <ProgressBar
+        android:id="@+id/countdown_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/stop_button"
+        android:layout_marginTop="39dp"/>
+
+    <Button
+        android:id="@+id/stop_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/start_button"
+        android:layout_toEndOf="@+id/start_button"
+        android:text="Stop"/>
 
 </RelativeLayout>
