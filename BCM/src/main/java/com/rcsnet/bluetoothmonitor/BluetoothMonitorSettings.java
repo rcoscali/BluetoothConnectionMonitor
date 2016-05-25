@@ -226,6 +226,7 @@ public class BluetoothMonitorSettings
             bindPreferenceSummaryToValue(findPreference("pref_include_known_devices"));
             bindPreferenceSummaryToValue(findPreference("ping_request_min_char_number"));
             bindPreferenceSummaryToValue(findPreference("ping_request_max_char_number"));
+            bindPreferenceSummaryToValue(findPreference("pref_enforce_state_changes"));
         }
 
         @Override

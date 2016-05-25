@@ -21,4 +21,9 @@
         android:key="ping_request_max_char_number"
         android:title="@string/ping_request_max_char_number"/>
 
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="pref_enforce_state_changes"
+        android:title="@string/title_pref_enforce_state_changes"/>
+
 </PreferenceScreen>

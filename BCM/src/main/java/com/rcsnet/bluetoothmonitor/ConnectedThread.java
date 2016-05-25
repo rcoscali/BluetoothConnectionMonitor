@@ -97,7 +97,6 @@ public class ConnectedThread
 
                 bufferReceived = Arrays.copyOf(buffer, bytes);
 
-
                 if (!isInterrupted())
                 {
                     if (mSentBuffer == null)
@@ -124,7 +123,7 @@ public class ConnectedThread
                 if (mSentBuffer != null)
                 {
                     if (Arrays.equals(bufferReceived, mSentBuffer))
-                        sendTransition(BluetoothClientServer.PING_STATE_REQUESTED,
+                        sendTransition(BluetoothClientServer.PING_STATE_NONE,
                                        BluetoothClientServer.PING_STATE_ACKNOWLEDGED,
                                        R.string.connected_thread_data_acknowledge,
                                        false);
@@ -176,6 +175,7 @@ public class ConnectedThread
     @Override
     public void cancel()
     {
+        mCanceling = true;
         try
         {
             mmSocket.close();

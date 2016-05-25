@@ -31,6 +31,7 @@ public class AcceptThread
     @Override
     public void run()
     {
+        mCanceling = false;
         // Warn UI thread
         sendMessage(R.string.accept_thread_started);
 
@@ -69,11 +70,14 @@ public class AcceptThread
                 }
                 catch (InterruptedException ie)
                 {
-                    // Transition for server
-                    sendTransition(BluetoothClientServer.PING_STATE_LISTENING,
-                                   BluetoothClientServer.PING_STATE_NONE,
-                                   R.string.accept_thread_timeout,
-                                   true);
+                    if (!mCanceling)
+                    {
+                        // Transition for server
+                        sendTransition(BluetoothClientServer.PING_STATE_LISTENING,
+                                       BluetoothClientServer.PING_STATE_NONE,
+                                       R.string.accept_thread_timeout,
+                                       true);
+                    }
                 }
             }
         }

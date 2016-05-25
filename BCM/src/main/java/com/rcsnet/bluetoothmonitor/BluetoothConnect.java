@@ -55,6 +55,7 @@ public class BluetoothConnect
     public static final  String  TAG                           = "BluetoothConnect";
     public static final  String  PREFS_NAME                    = "BluetoothConnectMonitorPreferences";
     private static final int     REQUEST_CODE_ENABLE_BLUETOOTH = 0;
+    public               boolean mEnforceStatesChanges         = false;
     private              boolean mScanningDevices              = false;
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -68,7 +69,6 @@ public class BluetoothConnect
     private SharedPreferences    mSettings;
     private PlaceholderFragment  mFragment;
     private boolean              mIncludeKnownDevices;
-
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -108,6 +108,7 @@ public class BluetoothConnect
         mSettings = PreferenceManager.getDefaultSharedPreferences(this);
         //mSettings = getSharedPreferences(BluetoothConnect.PREFS_NAME, MODE_PRIVATE);
         mIncludeKnownDevices = mSettings.getBoolean("pref_include_known_devices", true);
+        mEnforceStatesChanges = mSettings.getBoolean("pref_enforce_state_changes", false);
         mSettings.registerOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
     }
 

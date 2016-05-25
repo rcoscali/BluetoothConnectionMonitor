@@ -92,7 +92,7 @@ public class BluetoothClientServer
      * while interacting with activity UI.
      */
     private final        View.OnTouchListener
-            mDelayHideTouchListener                               = new View.OnTouchListener()
+                                 mDelayHideTouchListener          = new View.OnTouchListener()
     {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent)
@@ -105,6 +105,7 @@ public class BluetoothClientServer
         }
     };
     public  String            PING_STATE_NAMES[];
+    public boolean mEnforceStatesChanges = false;
     private int               mPingTimeout;
     private int               mPingRequestMinCharNr;
     private int               mPingRequestMaxCharNr;
@@ -386,6 +387,7 @@ public class BluetoothClientServer
         return PING_STATE_NAMES[state];
     }
 
+    @SuppressLint("DefaultLocale")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -474,8 +476,11 @@ public class BluetoothClientServer
         mPingFrequency = Integer.parseInt(mSettings.getString("ping_frequency", "1000"));
         mPingTimeout = Integer.parseInt(mSettings.getString("ping_timeout", "1000"));
         mPingFailureNumber = Integer.parseInt(mSettings.getString("ping_failure_number", "3"));
-        mPingRequestMinCharNr = mSettings.getInt("ping_request_min_char_number", PING_REQUEST_MIN_CHAR_NR_DEFAULT);
-        mPingRequestMaxCharNr = mSettings.getInt("ping_request_max_char_number", PING_REQUEST_MAX_CHAR_NR_DEFAULT);
+        mPingRequestMinCharNr = Integer.parseInt(mSettings.getString("ping_request_min_char_number",
+                                                                     String.format("%d", PING_REQUEST_MIN_CHAR_NR_DEFAULT)));
+        mPingRequestMaxCharNr = Integer.parseInt(mSettings.getString("ping_request_max_char_number",
+                                                                     String.format("%d", PING_REQUEST_MAX_CHAR_NR_DEFAULT)));
+        mEnforceStatesChanges = mSettings.getBoolean("pref_enforce_state_changes", false);
         mSettings.registerOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
     }
 
@@ -487,10 +492,20 @@ public class BluetoothClientServer
      */
     private void sendStateMessage(int resid)
     {
-        String msg = String.format(getResources().getString(R.string.state_message_format),
-                                   mMsgNr++,
-                                   PING_STATE_NAMES[mCurPingState],
-                                   getResources().getText(resid));
+        String msg;
+        if (mCurPingState != PING_STATE_FAILURE)
+            msg = String.format(getResources().getString(R.string.state_message_format),
+                                mMsgNr++,
+                                PING_STATE_NAMES[mCurPingState],
+                                getResources().getText(resid));
+        else
+        {
+            String failure = String.format("%s %d", PING_STATE_NAMES[mCurPingState], mFailureNumber);
+            msg = String.format(getResources().getString(R.string.state_message_format),
+                                mMsgNr++,
+                                failure,
+                                getResources().getText(resid));
+        }
         Log.v(TAG, msg);
         mStateText.append(msg);
     }
@@ -503,8 +518,16 @@ public class BluetoothClientServer
      */
     private void sendStateMessage(String str)
     {
-        String msg = String.format(getResources().getString(R.string.state_message_format), mMsgNr++,
-                                   PING_STATE_NAMES[mCurPingState], str);
+        String msg;
+        if (mCurPingState != PING_STATE_FAILURE)
+            msg = String.format(getResources().getString(R.string.state_message_format), mMsgNr++,
+                                PING_STATE_NAMES[mCurPingState], str);
+        else
+        {
+            String failure = String.format("%s %d", PING_STATE_NAMES[mCurPingState], mFailureNumber);
+            msg = String.format(getResources().getString(R.string.state_message_format), mMsgNr++,
+                                failure, str);
+        }
         Log.v(TAG, msg);
         mStateText.append(msg);
     }
@@ -586,8 +609,16 @@ public class BluetoothClientServer
 
     private void sendErrorMessage(String str)
     {
-        String msg = String.format(getResources().getString(R.string.state_error_format),
-                                   PING_STATE_NAMES[mCurPingState], str);
+        String msg;
+        if (mCurPingState != PING_STATE_FAILURE)
+            msg = String.format(getResources().getString(R.string.state_error_format),
+                                PING_STATE_NAMES[mCurPingState], str);
+        else
+        {
+            String failure = String.format("%s %d", PING_STATE_NAMES[mCurPingState], mFailureNumber);
+            msg = String.format(getResources().getString(R.string.state_error_format),
+                                failure, str);
+        }
         Log.v(TAG, msg);
         mStateText.append(msg);
     }

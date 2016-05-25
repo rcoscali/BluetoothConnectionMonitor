@@ -41,7 +41,7 @@ public class TimeoutThread
         Log.v(TAG, "Running TimeOut Thread");
         try
         {
-            synchronized (mToTimeout)
+            synchronized (this)
             {
                 Log.v(TAG, "Waiting " + mMillis + "ms and " + mNanos + " ns before interrupting thread " + mToTimeout);
                 wait(mMillis, mNanos);

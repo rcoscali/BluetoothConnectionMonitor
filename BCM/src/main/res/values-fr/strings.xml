@@ -15,9 +15,7 @@
         <item>Connecté</item>
         <item>Requete</item>
         <item>Acquité</item>
-        <item>Echec 1</item>
-        <item>Echec 2</item>
-        <item>Echec 3</item>
+        <item>Echec</item>
         <item>ALARME !!!</item>
         <item>Stop</item>
         <item>Ecoute</item>
@@ -111,6 +109,7 @@
     <string name="connected_thread_data_received">Données Reçues</string>
     <string name="accept_thread_timeout">Tâche d\'Ecoute: Temporisation échue pendant l\'attente des données</string>
     <string name="connected_thread_data_timeout">Tâche de Réception: Temporisation échue pendant la réception des données</string>
-    <string name="ping_request_min_char_number">Ping Request Minimum Size</string>
-    <string name="ping_request_max_char_number">Ping Request Maximum Size</string>
+    <string name="ping_request_min_char_number">Taille Minimum de la requête de Ping</string>
+    <string name="ping_request_max_char_number">Taille Maximum de la requête de Ping</string>
+    <string name="title_pref_enforce_state_changes">Enforcement des changements d'états</string>
 </resources>

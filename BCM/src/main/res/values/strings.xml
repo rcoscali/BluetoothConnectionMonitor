@@ -19,9 +19,7 @@
         <item>Connected</item>
         <item>Requested</item>
         <item>Acknowledged</item>
-        <item>First Failure</item>
-        <item>Second Failure</item>
-        <item>Third Failure</item>
+        <item>Failure</item>
         <item>ALARM !!!</item>
         <item>Stopped</item>
         <item>Listening</item>
@@ -117,4 +115,5 @@
     <string name="ping_request_min_char_number">Ping Request Minimum Size</string>
     <string name="ping_request_max_char_number">Ping Request Maximum Size</string>
     <string name="title_activity_timeout_test">TimeoutTestActivity</string>
+    <string name="title_pref_enforce_state_changes">Enforce State Machine States Changes</string>
 </resources>

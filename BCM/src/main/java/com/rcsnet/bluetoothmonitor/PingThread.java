@@ -116,6 +116,7 @@ public class PingThread
     public
     void cancel()
     {
+        mCanceling = true;
         mmConnectedThread.interrupt();
         try
         {

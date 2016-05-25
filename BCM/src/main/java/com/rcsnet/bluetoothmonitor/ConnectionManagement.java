@@ -28,6 +28,7 @@ public abstract class ConnectionManagement
     protected final          Resources             mResources;
     // Boolean flag for run loop control
     protected volatile       boolean               mNotEnd;
+    protected volatile boolean mCanceling = false;
 
     ConnectionManagement (BluetoothClientServer activity)
     {
@@ -37,6 +38,7 @@ public abstract class ConnectionManagement
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mNotEnd = true;
         mMe = this;
+        mCanceling = false;
     }
 
     @Override
@@ -46,6 +48,7 @@ public abstract class ConnectionManagement
     public
     void cancel()
     {
+        mCanceling = true;
         mNotEnd = false;
         mMe.interrupt();
         try
@@ -66,15 +69,29 @@ public abstract class ConnectionManagement
         msg.arg1 = mActivity.getState();
         if (from != BluetoothClientServer.PING_STATE_NONE &&
             msg.arg1 != from)
-            throw new RuntimeException("Invalid current state '[" + from + "] " + mActivity.getStateName(from) +
-                                       "' (Actual state: '[" + msg.arg1 +
-                                       "] " + mActivity.getStateName(msg.arg1) + "')");
+        {
+            if (mActivity.mEnforceStatesChanges)
+                throw new RuntimeException("Invalid current state '[" + from + "] " + mActivity.getStateName(from) +
+                                           "' (Actual state: '[" + msg.arg1 +
+                                           "] " + mActivity.getStateName(msg.arg1) + "')");
+            else
+                Log.i(TAG, "Invalid current state '[" + from + "] " + mActivity.getStateName(from) +
+                           "' (Actual state: '[" + msg.arg1 +
+                           "] " + mActivity.getStateName(msg.arg1) + "')");
+        }
         msg.arg2 = mActivity.setState(err);
         if (to != BluetoothClientServer.PING_STATE_NONE &&
             msg.arg2 != to)
-            throw new RuntimeException("Invalid target state '[" + to + "] " + mActivity.getStateName(to) +
-                                       "' (Actual target state: '[" + msg.arg2 +
-                                       "] " + mActivity.getStateName(msg.arg2) + "')");
+        {
+            if (mActivity.mEnforceStatesChanges)
+                throw new RuntimeException("Invalid target state '[" + to + "] " + mActivity.getStateName(to) +
+                                           "' (Actual target state: '[" + msg.arg2 +
+                                           "] " + mActivity.getStateName(msg.arg2) + "')");
+            else
+                Log.i(TAG, "Invalid target state '[" + to + "] " + mActivity.getStateName(to) +
+                           "' (Actual target state: '[" + msg.arg2 +
+                           "] " + mActivity.getStateName(msg.arg2) + "')");
+        }
         data.putString("reason", mResources.getString(msgResId));
         msg.setData(data);
         msg.sendToTarget();

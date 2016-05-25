@@ -85,16 +85,15 @@ public class ConnectThread
 
                 // Then try to close socket
                 mmSocket.close();
-
-                // Warn UI thread and changed state to connected
-                sendTransition(BluetoothClientServer.PING_STATE_NONE,
-                               BluetoothClientServer.PING_STATE_NONE,
-                               R.string.connected_thread_started,
-                               true);
             }
             catch (IOException ignored)
             {
             }
+            // Warn UI thread and changed state to connected
+            sendTransition(BluetoothClientServer.PING_STATE_NONE,
+                           BluetoothClientServer.PING_STATE_NONE,
+                           R.string.connected_thread_started,
+                           true);
         }
     }
 
