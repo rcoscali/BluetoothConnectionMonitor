@@ -1,7 +1,12 @@
+/**
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
+ * Created by cohen on 20/05/2016.
+ */
 package com.rcsnet.bluetoothmonitor;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothSocket;
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,8 +14,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 
 /**
- * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
- * Created by cohen on 20/05/2016.
+ * Thread handling in/out stream from a connection
  */
 public class ConnectedThread
         extends ConnectionManagement
@@ -65,6 +69,7 @@ public class ConnectedThread
     public
     void run()
     {
+        Log.v(TAG, "Running Connected Thread");
         // Keep listening to the InputStream until an exception occurs
         try
         {
@@ -75,14 +80,16 @@ public class ConnectedThread
             int    bufSize;
             byte[] bufferReceived;
 
+            Log.v(TAG, "Acquiring monitor " + mMonitor);
             synchronized(mMonitor)
             {
+                Log.v(TAG, "monitor " + mMonitor + "acquired");
                 buffer = new byte[1024];
                 size = new byte[1];
             }
             while (mNotEnd)
             {
-                mTimeoutThread = new TimeoutThread(mActivity, 1000, this);
+                mTimeoutThread = new TimeoutThread(mActivity, mActivity.getPingTimeout(), this);
                 mTimeoutThread.start();
 
                 // Read from the InputStream
@@ -94,6 +101,14 @@ public class ConnectedThread
 
                 // Thread interrupted & joined in cancel
                 mTimeoutThread.cancel();
+                try
+                {
+                    mTimeoutThread.join();
+                }
+                catch (InterruptedException ignored)
+                {
+                }
+                mTimeoutThread = null;
 
                 bufferReceived = Arrays.copyOf(buffer, bytes);
 
@@ -111,7 +126,7 @@ public class ConnectedThread
                 }
                 else
                 {
-                    sendTransition(BluetoothClientServer.PING_STATE_REQUESTED,
+                    sendTransition(BluetoothClientServer.PING_STATE_NONE,
                                    BluetoothClientServer.PING_STATE_NONE,
                                    R.string.connected_thread_data_timeout,
                                    true);
@@ -154,7 +169,7 @@ public class ConnectedThread
                     catch (IOException e)
                     {
                         mNotEnd = false;
-                        sendTransition(BluetoothClientServer.PING_STATE_REQUESTED,
+                        sendTransition(BluetoothClientServer.PING_STATE_NONE,
                                        BluetoothClientServer.PING_STATE_NONE,
                                        R.string.connected_thread_io_exception,
                                        true);

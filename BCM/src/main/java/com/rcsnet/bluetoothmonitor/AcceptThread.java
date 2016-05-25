@@ -1,3 +1,7 @@
+/**
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
+ * Created by cohen on 20/05/2016.
+ */
 package com.rcsnet.bluetoothmonitor;
 
 import android.bluetooth.BluetoothServerSocket;
@@ -6,8 +10,7 @@ import android.bluetooth.BluetoothSocket;
 import java.io.IOException;
 
 /**
- * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
- * Created by cohen on 20/05/2016.
+ * Thread providing an accept on a socket for a server
  */
 public class AcceptThread
         extends ConnectionManagement

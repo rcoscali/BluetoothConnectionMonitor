@@ -1,3 +1,6 @@
+/**
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
+ */
 package com.rcsnet.bluetoothmonitor;
 
 import android.annotation.SuppressLint;
@@ -24,7 +27,7 @@ import android.widget.TextView;
 import java.util.UUID;
 
 /**
- * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
+ * Activity driving client/server
  */
 public class BluetoothClientServer
         extends AppCompatActivity
@@ -86,24 +89,6 @@ public class BluetoothClientServer
      */
     private static final int     UI_ANIMATION_DELAY               = 300;
     private final        Handler mHideHandler                     = new Handler();
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    private final        View.OnTouchListener
-                                 mDelayHideTouchListener          = new View.OnTouchListener()
-    {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent)
-        {
-            if (AUTO_HIDE)
-            {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-            }
-            return false;
-        }
-    };
     public  String            PING_STATE_NAMES[];
     public boolean mEnforceStatesChanges = false;
     private int               mPingTimeout;
@@ -160,6 +145,24 @@ public class BluetoothClientServer
             hide();
         }
     };
+    /**
+     * Touch listener to use for in-layout UI controls to delay hiding the
+     * system UI. This is to prevent the jarring behavior of controls going away
+     * while interacting with activity UI.
+     */
+    private final View.OnTouchListener
+                                       mDelayHideTouchListener = new View.OnTouchListener()
+    {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent)
+        {
+            if (AUTO_HIDE)
+            {
+                delayedHide(AUTO_HIDE_DELAY_MILLIS);
+            }
+            return false;
+        }
+    };
     private BluetoothDevice mDevice;
     private AcceptThread    mAcceptThread;
     private ConnectThread   mConnectThread;
@@ -178,14 +181,14 @@ public class BluetoothClientServer
                 if (mCurPingState == state_from)
                 {
                     mCurPingState = state_to;
-                    sendStateMessage(msg.getData().getString("reason"));
+                    postStateMessage(msg.getData().getString("reason"));
                 }
                 break;
             }
 
             case MESSAGE_WARN:
             {
-                sendStateMessage(msg.getData().getString("msg"));
+                postStateMessage(msg.getData().getString("msg"));
                 break;
             }
 
@@ -193,7 +196,7 @@ public class BluetoothClientServer
             {
                 int    outbytes = msg.arg1;
                 String outdata  = msg.getData().getString("dataout");
-                sendStateMessage(String.format(getString(R.string.bytes_of_data_sent), outbytes, outdata));
+                postStateMessage(String.format(getString(R.string.bytes_of_data_sent), outbytes, outdata));
                 break;
             }
 
@@ -201,13 +204,13 @@ public class BluetoothClientServer
             {
                 int    inbytes = msg.arg1;
                 String indata  = msg.getData().getString("datain");
-                sendStateMessage(String.format(getString(R.string.bytes_of_data_received), inbytes, indata));
+                postStateMessage(String.format(getString(R.string.bytes_of_data_received), inbytes, indata));
                 break;
             }
 
             case MESSAGE_ERROR:
             {
-                sendErrorMessage(msg.getData().getString("msg"));
+                postErrorMessage(msg.getData().getString("msg"));
                 mConnectThread.interrupt();
                 try
                 {
@@ -226,7 +229,7 @@ public class BluetoothClientServer
                 break;
 
             default:
-                sendStateMessage(String.format((String) getResources().getText(R.string.unexpected_msg_received), msg.what));
+                postStateMessage(String.format((String) getResources().getText(R.string.unexpected_msg_received), msg.what));
             }
 
         }
@@ -332,7 +335,19 @@ public class BluetoothClientServer
             if (!err)
                 new_state = PING_STATE_ACKNOWLEDGED;
             else
+            {
                 new_state = PING_STATE_FAILURE;
+                if (mFailureNumber == mPingFailureNumber)
+                {
+                    new_state = PING_STATE_ALARM;
+                    Intent intent = new Intent(
+                            getApplicationContext(),
+                            ConnectionLostAlarm.class);
+                    startActivity(intent);
+                }
+                else
+                    mFailureNumber++;
+            }
             break;
         case PING_STATE_ACKNOWLEDGED:
             if (!err)
@@ -343,7 +358,19 @@ public class BluetoothClientServer
                     new_state = PING_STATE_REQUESTED;
             }
             else
+            {
                 new_state = PING_STATE_FAILURE;
+                if (mFailureNumber == mPingFailureNumber)
+                {
+                    new_state = PING_STATE_ALARM;
+                    Intent intent = new Intent(
+                            getApplicationContext(),
+                            ConnectionLostAlarm.class);
+                    startActivity(intent);
+                }
+                else
+                    mFailureNumber++;
+            }
             break;
         case PING_STATE_FAILURE:
             if (!err)
@@ -353,7 +380,8 @@ public class BluetoothClientServer
             }
             else
             {
-                if (mFailureNumber >= mPingFailureNumber)
+                new_state = PING_STATE_FAILURE;
+                if (mFailureNumber == mPingFailureNumber)
                 {
                     new_state = PING_STATE_ALARM;
                     Intent intent = new Intent(
@@ -366,6 +394,7 @@ public class BluetoothClientServer
             }
             break;
         case PING_STATE_ALARM:
+        case PING_STATE_STOPPED:
             new_state = PING_STATE_STOPPED;
             break;
         }
@@ -445,7 +474,7 @@ public class BluetoothClientServer
         });
         mMsgNr = 0;
         mCurPingState = PING_STATE_INIT;
-        sendStateMessage(R.string.starting);
+        postStateMessage(R.string.starting);
 
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
@@ -459,7 +488,7 @@ public class BluetoothClientServer
         findViewById(R.id.client_button).setOnClickListener(this);
 
         if (mLocal) {
-            sendStateMessage((String) getResources().getText(R.string.launching_server));
+            postStateMessage((String) getResources().getText(R.string.launching_server));
             assert (findViewById(R.id.client_button)) != null;
             //noinspection ConstantConditions
             findViewById(R.id.client_button).setEnabled(false);
@@ -490,7 +519,7 @@ public class BluetoothClientServer
      *
      * @param resid Identifier of the string to display as message
      */
-    private void sendStateMessage(int resid)
+    private void postStateMessage(int resid)
     {
         String msg;
         if (mCurPingState != PING_STATE_FAILURE)
@@ -516,7 +545,7 @@ public class BluetoothClientServer
      *
      * @param str String to display
      */
-    private void sendStateMessage(String str)
+    private void postStateMessage(String str)
     {
         String msg;
         if (mCurPingState != PING_STATE_FAILURE)
@@ -607,7 +636,7 @@ public class BluetoothClientServer
         mSettings.registerOnSharedPreferenceChangeListener(mSettingsChangeLsnr);
     }
 
-    private void sendErrorMessage(String str)
+    private void postErrorMessage(String str)
     {
         String msg;
         if (mCurPingState != PING_STATE_FAILURE)
@@ -641,7 +670,7 @@ public class BluetoothClientServer
         View button = findViewById(R.id.client_button);
         if (button != null)
             button.setEnabled(false);
-        sendStateMessage((String) getResources().getText(R.string.launching_client));
+        postStateMessage((String) getResources().getText(R.string.launching_client));
         mConnectThread = new ConnectThread(this, mDevice);
         mConnectThread.setPingRequestMinSize(mPingRequestMinCharNr);
         mConnectThread.setPingRequestMaxSize(mPingRequestMaxCharNr);

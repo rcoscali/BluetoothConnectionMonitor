@@ -59,17 +59,25 @@ public class PingThread
                                                     mSocket,
                                                     Arrays.copyOfRange(buffer, 1, buffer.length),
                                                     this);
-            if (mmTimeoutThread == null)
-                mmTimeoutThread = new TimeoutThread(mActivity,
-                                                    mActivity.getPingTimeout(),
-                                                    mmConnectedThread);
-            mmTimeoutThread.start();
+            mmTimeoutThread = new TimeoutThread(mActivity,
+                                                mActivity.getPingTimeout(),
+                                                mmConnectedThread);
             synchronized (mMonitor)
             {
+                mmTimeoutThread.start();
                 mmConnectedThread.start();
             }
             mmConnectedThread.write(buffer);
+
             mmTimeoutThread.cancel();
+            try
+            {
+                mmTimeoutThread.join();
+            }
+            catch (InterruptedException ignored)
+            {
+            }
+            mmTimeoutThread = null;
 
             sendTransition(BluetoothClientServer.PING_STATE_NONE,
                            BluetoothClientServer.PING_STATE_NONE,
@@ -89,7 +97,7 @@ public class PingThread
 
             try
             {
-                synchronized (mMonitor)
+                synchronized (this)
                 {
                     wait(mActivity.getPingFrequency());
                 }
@@ -103,12 +111,11 @@ public class PingThread
                 sendTransition(BluetoothClientServer.PING_STATE_NONE,
                                BluetoothClientServer.PING_STATE_NONE,
                                R.string.alarm_launched,
-                               false);
+                               true);
                 mNotEnd = false;
             }
         }
 
-        mmConnectedThread.cancel();
         mHandler.obtainMessage(BluetoothClientServer.MESSAGE_PING_THREAD_STOP).sendToTarget();
     }
 

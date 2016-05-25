@@ -1,3 +1,7 @@
+/**
+ * Created by cohen on 20/05/2016.
+ * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
+ */
 package com.rcsnet.bluetoothmonitor;
 
 import android.bluetooth.BluetoothAdapter;
@@ -10,8 +14,7 @@ import android.util.Log;
 import java.util.Arrays;
 
 /**
- * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
- * Created by cohen on 20/05/2016.
+ * Abstract connection management thread
  */
 public abstract class ConnectionManagement
         extends Thread

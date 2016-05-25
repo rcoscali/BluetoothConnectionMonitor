@@ -46,7 +46,7 @@ public class TimeoutThread
                 Log.v(TAG, "Waiting " + mMillis + "ms and " + mNanos + " ns before interrupting thread " + mToTimeout);
                 wait(mMillis, mNanos);
                 Log.v(TAG, "Timeout runs out of time: interrupting ...");
-                //mToTimeout.interrupt();
+                mToTimeout.interrupt();
             }
         }
         catch (InterruptedException ignored)

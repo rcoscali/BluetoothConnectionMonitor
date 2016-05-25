@@ -81,6 +81,8 @@ public class BluetoothConnect
                 {
                     if (s.equals("pref_include_known_devices"))
                         mIncludeKnownDevices = sharedPreferences.getBoolean("pref_include_known_devices", true);
+                    else if (s.equals("pref_enforce_state_changes"))
+                        mEnforceStatesChanges = sharedPreferences.getBoolean("pref_enforce_state_changes", false);
                 }
             };
 

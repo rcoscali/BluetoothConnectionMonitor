@@ -120,7 +120,8 @@ public class BluetoothMonitorSettings
         // Trigger the listener immediately with the preference's
         // current value.
         if (preference.getKey().equals("pref_include_known_devices") ||
-            preference.getKey().equals("notifications_new_message_vibrate"))
+            preference.getKey().equals("notifications_new_message_vibrate") ||
+            preference.getKey().equals("pref_enforce_state_changes"))
             sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
                                                                      PreferenceManager
                                                                              .getDefaultSharedPreferences(preference.getContext())
