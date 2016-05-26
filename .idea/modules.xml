@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/BCM/BCM.iml" filepath="$PROJECT_DIR$/BCM/BCM.iml" />
+      <module fileurl="file://$PROJECT_DIR$/BCM/BCM.iml" filepath="$PROJECT_DIR$/BCM/BCM.iml" />
       <module fileurl="file://$PROJECT_DIR$/BluetoothConnectionMonitor.iml" filepath="$PROJECT_DIR$/BluetoothConnectionMonitor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/BluetoothConnectionMonitor1.iml" filepath="$PROJECT_DIR$/BluetoothConnectionMonitor1.iml" />
     </modules>
   </component>
 </project>
