@@ -1,5 +1,6 @@
 /**
  * Copyright (C) 2016 - Rémi Cohen-Scali. All rights reserved.
+ *
  * Created by cohen on 20/05/2016.
  */
 package com.rcsnet.bluetoothmonitor;
