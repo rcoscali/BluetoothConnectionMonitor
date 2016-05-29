@@ -10,6 +10,7 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.rcsnet.bluetoothmonitor.StateMachineTest">
 
+<!--
     <com.rcsnet.bluetoothmonitor.StateMachineTest.MySurfaceView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -17,6 +18,7 @@
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@+id/state1"
         android:layout_alignEnd="@+id/state8"/>
+-->
 
     <Button
         android:layout_width="wrap_content"
@@ -85,5 +87,22 @@
         android:id="@+id/state2"
         android:layout_alignBottom="@+id/state1"
         android:layout_alignStart="@+id/state4"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Medium Text"
+        android:id="@+id/status_text"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="START"
+        android:id="@+id/start_button"
+        android:layout_above="@+id/status_text"
+        android:layout_alignEnd="@+id/status_text"/>
 
 </RelativeLayout>

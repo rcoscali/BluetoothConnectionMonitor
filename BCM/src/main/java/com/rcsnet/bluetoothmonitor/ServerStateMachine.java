@@ -1,5 +1,6 @@
 package com.rcsnet.bluetoothmonitor;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
@@ -19,7 +20,7 @@ import java.util.Map;
 public class ServerStateMachine
         extends StateMachine
 {
-    private BluetoothAdapter      mAdapter;
+    private BluetoothAdapter mAdapter;
     private BluetoothServerSocket mmServerSocket;
     private Handler               mHandler;
 
@@ -33,7 +34,7 @@ public class ServerStateMachine
             try
             {
                 mmServerSocket = mAdapter.listenUsingRfcommWithServiceRecord(BluetoothClientServer.NAME,
-                                                                  BluetoothClientServer.MY_UUID);
+                                                                             BluetoothClientServer.MY_UUID);
                 sendTransitionEvent(mInitDoneTransition, "");
             }
             catch (InterruptedException ie)
@@ -203,7 +204,7 @@ public class ServerStateMachine
         public ErrorState()
         {
             super("Error");
-            mMaxFailureNumber = mActivity.getPingFailureNumber();
+            mMaxFailureNumber = mPingFailureNumber;
         }
 
         @Override
@@ -249,12 +250,14 @@ public class ServerStateMachine
     public TransitionEvent mRcvRspFailedRestoreTransition     = new TransitionEvent(this, errorState, receivingState);
     public TransitionEvent mAlarmRestoreTransition            = new TransitionEvent(this, errorState, alarmState);
 
-    public ServerStateMachine(BluetoothClientServer activity, State initState, State stopState)
+    public ServerStateMachine(Activity activity, State initState, State stopState)
     {
-        super(activity, initState, stopState);
+        super(activity);
 
         mAdapter = BluetoothAdapter.getDefaultAdapter();
-        mHandler = mActivity.mHandler;
+
+        mInitState = initState;
+        mStopState = stopState;
 
         addTransition(mInitDoneTransition);
         addTransition(mConnectionTransition);

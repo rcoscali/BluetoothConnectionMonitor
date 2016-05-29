@@ -4,6 +4,7 @@
  */
 package com.rcsnet.bluetoothmonitor;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.util.ArrayMap;
 import android.util.Log;
@@ -22,18 +23,28 @@ public class StateMachine
 {
     private static final String TAG = "StateMachine";
 
-    protected final BluetoothClientServer mActivity;
+    protected final Activity mActivity;
     protected final List<TransitionEvent> mTransitions;
     protected State mCurrentState = null;
-    protected final State mInitState;
-    protected final State mStopState;
+    protected State mInitState;
+    protected State mStopState;
     protected final List<TransitionEventListener> listeners = new ArrayList<>(20);
+    protected int mPingTimeout;
+    protected int mPingFailureNumber;
 
-    public StateMachine(BluetoothClientServer activity, State initState, State stopState)
+    public StateMachine(Activity activity)
     {
         mActivity = activity;
         mTransitions = new ArrayList<>(10);
+    }
+
+    public void setInitState(State initState)
+    {
         mInitState = initState;
+    }
+
+    public void setStopState(State stopState)
+    {
         mStopState = stopState;
     }
 
@@ -79,7 +90,7 @@ public class StateMachine
             if (candidates.size() > 1)
                 throw new RuntimeException("Ambiguous transition");
         }
-        applyTransition(e, mActivity.getPingTimeout());
+        applyTransition(e, mPingTimeout);
     }
 
     public void addTransition(TransitionEvent transitionEvent)
@@ -200,6 +211,11 @@ public class StateMachine
             mIsOriginOf = new ArrayList<>(10);
             mIsTargetOf = new ArrayList<>(10);
             mName = name;
+        }
+
+        public void setExitAction(Runnable exitAction)
+        {
+            mExitAction = exitAction;
         }
 
         @Override
