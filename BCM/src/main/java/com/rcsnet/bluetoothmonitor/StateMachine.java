@@ -4,11 +4,14 @@
  */
 package com.rcsnet.bluetoothmonitor;
 
+import android.os.Bundle;
+import android.support.v4.util.ArrayMap;
 import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.List;
+import java.util.Map;
 
 /**
  * State Machine mechanics implementation
@@ -19,13 +22,16 @@ public class StateMachine
 {
     private static final String TAG = "StateMachine";
 
-    private List<TransitionEvent> mTransitions;
-    private State mCurrentState = null;
-    private State mInitState    = null;
-    private State mStopState    = null;
+    protected final BluetoothClientServer mActivity;
+    protected final List<TransitionEvent> mTransitions;
+    protected State mCurrentState = null;
+    protected final State mInitState;
+    protected final State mStopState;
+    protected final List<TransitionEventListener> listeners = new ArrayList<>(20);
 
-    public StateMachine(State initState, State stopState)
+    public StateMachine(BluetoothClientServer activity, State initState, State stopState)
     {
+        mActivity = activity;
         mTransitions = new ArrayList<>(10);
         mInitState = initState;
         mStopState = stopState;
@@ -36,6 +42,44 @@ public class StateMachine
     {
         mCurrentState = mInitState;
         mCurrentState.enter(millis);
+    }
+
+    public TransitionEventListener registerTransitionEventListener(TransitionEventListener lsnr)
+    {
+        synchronized (listeners) {
+            if (!listeners.contains(lsnr)) listeners.add(lsnr);
+        }
+        return lsnr;
+    }
+
+    public void unregisterTransitionEventListener(TransitionEventListener lsnr)
+    {
+        synchronized (listeners) {
+            if (listeners.contains(lsnr)) listeners.remove(lsnr);
+        }
+    }
+
+    public void sendTransitionEvent(TransitionEvent e)
+        throws InterruptedException
+    {
+        sendTransitionEvent(e, "");
+    }
+
+    public void sendTransitionEvent(TransitionEvent e, String msg)
+        throws InterruptedException
+    {
+        List<TransitionEventListener> candidates = new ArrayList<>(5);
+        synchronized (listeners) {
+            for (TransitionEventListener lsnr : listeners) {
+                if (lsnr.onTransitionEventReceived(e))
+                    candidates.add(lsnr);
+            }
+            if (candidates.isEmpty())
+                throw new RuntimeException("Unknown transition");
+            if (candidates.size() > 1)
+                throw new RuntimeException("Ambiguous transition");
+        }
+        applyTransition(e, mActivity.getPingTimeout());
     }
 
     public void addTransition(TransitionEvent transitionEvent)
@@ -56,6 +100,7 @@ public class StateMachine
         {
             mCurrentState.exit(millis);
             mCurrentState = transitionEvent.target();
+            mCurrentState.setTrigerringEvent(transitionEvent);
             mCurrentState.enter(millis);
         }
         return mCurrentState;
@@ -81,19 +126,28 @@ public class StateMachine
         }
     }
 
+    public interface TransitionEventListener
+    {
+        boolean onTransitionEventReceived(TransitionEvent event);
+    }
+
     public static class TransitionEvent
             extends EventObject
     {
         private static final String TAG = "StateMachine.TransitionEvent";
 
-        private final State mFrom;
-        private final State mTo;
+        private final State               mFrom;
+        private final State               mTo;
+        private final Map<String, Object> mUserData;
+        private final Map<String, byte[]> mUserByteData;
 
         public TransitionEvent(Object src, State from, State to)
         {
             super(src);
             mFrom = from;
             mTo = to;
+            mUserData = new ArrayMap<>(10);
+            mUserByteData = new ArrayMap<>(10);
             mFrom.addAsOriginOf(this);
             mTo.addAsTargetOf(this);
         }
@@ -114,24 +168,50 @@ public class StateMachine
             String event = super.toString();
             return "Transition " + event + " from " + mFrom.toString() + " to " + mTo.toString();
         }
+
+        public
+        Map<String, Object> getmUserData()
+        {
+            return mUserData;
+        }
+
+        public
+        Map<String, byte[]> getmUserByteData()
+        {
+            return mUserByteData;
+        }
     }
 
     public static abstract class State
-            implements Runnable
+            implements Runnable, StateMachine.TransitionEventListener
     {
         private static final String TAG = "StateMachine.State";
 
         private final String mName;
+
         private Runnable mExitAction = null;
 
-        private List<TransitionEvent> mIsOriginOf;
-        private List<TransitionEvent> mIsTargetOf;
+        private List<StateMachine.TransitionEvent> mIsOriginOf;
+        private List<StateMachine.TransitionEvent> mIsTargetOf;
+        private TransitionEvent mTrigerringEvent = null;
 
         public State(String name)
         {
             mIsOriginOf = new ArrayList<>(10);
             mIsTargetOf = new ArrayList<>(10);
             mName = name;
+        }
+
+        @Override
+        public
+        boolean onTransitionEventReceived(TransitionEvent event)
+        {
+            if (isOriginOf(event))
+            {
+                mTrigerringEvent = event;
+                event.target().setTrigerringEvent(event);
+            }
+            return isOriginOf(event);
         }
 
         @Override
@@ -179,8 +259,21 @@ public class StateMachine
             }
         }
 
+        public
+        void setTrigerringEvent(TransitionEvent trigerringEvent)
+        {
+            this.mTrigerringEvent = trigerringEvent;
+        }
+
+        public
+        TransitionEvent getTrigerringEvent()
+        {
+            return this.mTrigerringEvent;
+        }
+
         @Override
         public abstract void run();
+
     }
 
 }

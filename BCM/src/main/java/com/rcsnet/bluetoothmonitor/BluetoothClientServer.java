@@ -111,7 +111,7 @@ public class BluetoothClientServer
     public  String            PING_STATE_NAMES[];
     public boolean mEnforceStatesChanges = false;
     public  ServerStateMachine mServerStateMachine;
-    public  ClientStateMachine mServerStateMachine;
+    public  ClientStateMachine mClientStateMachine;
     private int                mPingTimeout;
     private int                mPingRequestMinCharNr;
     private int                mPingRequestMaxCharNr;
