@@ -15,7 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * State Machine mechanics implementation
+ * Finite State Machine mechanics implementation
+ *
  * Created by rcoscali on 26/05/16.
  */
 public class StateMachine
@@ -23,6 +24,9 @@ public class StateMachine
 {
     private static final String TAG = "StateMachine";
 
+    /**
+     *
+     */
     protected final Activity mActivity;
     protected final List<TransitionEvent> mTransitions;
     protected State mCurrentState = null;
@@ -32,30 +36,59 @@ public class StateMachine
     protected int mPingTimeout;
     protected int mPingFailureNumber;
 
-    public StateMachine(Activity activity)
+    /**
+     * State machine constructor
+     *
+     * @param activity the parent activity
+     */
+    public
+    StateMachine(Activity activity)
     {
         mActivity = activity;
         mTransitions = new ArrayList<>(10);
     }
 
-    public void setInitState(State initState)
+    /**
+     * Affectation to the init state field
+     */
+    public
+    void setInitState(State initState)
     {
         mInitState = initState;
     }
 
-    public void setStopState(State stopState)
+    /**
+     * Affectation to the stop state field
+     * @param stopState
+     */
+    public
+    void setStopState(State stopState)
     {
         mStopState = stopState;
     }
 
-    public void init(int millis)
+    /**
+     * The init state actions
+     *
+     * @param millis
+     * @throws InterruptedException
+     */
+    public
+    void init(int millis)
             throws InterruptedException
     {
         mCurrentState = mInitState;
         mCurrentState.enter(millis);
     }
 
-    public TransitionEventListener registerTransitionEventListener(TransitionEventListener lsnr)
+    /**
+     * registerTransitionEventListener
+     *
+     * @param lsnr the listener to add
+     * @return the lsnr or null is something wrong occured
+     */
+    public
+    TransitionEventListener registerTransitionEventListener(TransitionEventListener lsnr)
     {
         synchronized (listeners) {
             if (!listeners.contains(lsnr)) listeners.add(lsnr);
@@ -63,20 +96,42 @@ public class StateMachine
         return lsnr;
     }
 
-    public void unregisterTransitionEventListener(TransitionEventListener lsnr)
+    /**
+     * unregisterTransitionEventListener
+     *
+     * @param lsnr the listener to remove
+     */
+    public
+    void unregisterTransitionEventListener(TransitionEventListener lsnr)
     {
         synchronized (listeners) {
             if (listeners.contains(lsnr)) listeners.remove(lsnr);
         }
     }
 
-    public void sendTransitionEvent(TransitionEvent e)
+    /**
+     * Send a transition event
+     *
+     * @param e The event to send to states
+     * @throws InterruptedException In case time provided for executing new state action
+     *                              too long
+     */
+    public
+    void sendTransitionEvent(TransitionEvent e)
         throws InterruptedException
     {
-        sendTransitionEvent(e, "");
+        sendTransitionEvent(e, "Sending event " + e.origin());
     }
 
-    public void sendTransitionEvent(TransitionEvent e, String msg)
+    /**
+     * Send a transition event
+     *
+     * @param e The event to send to states
+     * @throws InterruptedException In case time provided for executing new state action
+     *                              too long
+     */
+    public
+    void sendTransitionEvent(TransitionEvent e, String msg)
         throws InterruptedException
     {
         List<TransitionEventListener> candidates = new ArrayList<>(5);
@@ -93,6 +148,11 @@ public class StateMachine
         applyTransition(e, mPingTimeout);
     }
 
+    /**
+     * Add transition to the specified state
+     *
+     * @param transitionEvent
+     */
     public void addTransition(TransitionEvent transitionEvent)
     {
         for (TransitionEvent t : mTransitions)
@@ -137,22 +197,39 @@ public class StateMachine
         }
     }
 
-    public interface TransitionEventListener
+    /**
+     * ===========================================================================================
+     * TransitionEvent listener interface
+     *
+     * ===========================================================================================
+     */
+    public
+    interface TransitionEventListener
     {
         boolean onTransitionEventReceived(TransitionEvent event);
     }
 
-    public static class TransitionEvent
+    /**
+     * ===========================================================================================
+     * TransitionEvent interface
+     *
+     * The event triggering the
+     * ===========================================================================================
+     */
+    public static
+    class TransitionEvent
             extends EventObject
     {
         private static final String TAG = "StateMachine.TransitionEvent";
 
+        private final String              mName;
         private final State               mFrom;
         private final State               mTo;
         private final Map<String, Object> mUserData;
         private final Map<String, byte[]> mUserByteData;
 
-        public TransitionEvent(Object src, State from, State to)
+        public
+        TransitionEvent(String name, Object src, State from, State to)
         {
             super(src);
             mFrom = from;
@@ -161,20 +238,36 @@ public class StateMachine
             mUserByteData = new ArrayMap<>(10);
             mFrom.addAsOriginOf(this);
             mTo.addAsTargetOf(this);
+            mName = name;
         }
 
-        public State origin()
+        public
+        TransitionEvent(Object src, State from, State to)
+        {
+            this("", src, from, to);
+        }
+
+        public
+        TransitionEvent(State from, State to)
+        {
+            this("", null, from, to);
+        }
+
+        public
+        State origin()
         {
             return mFrom;
         }
 
-        public State target()
+        public
+        State target()
         {
             return mTo;
         }
 
         @Override
-        public String toString()
+        public
+        String toString()
         {
             String event = super.toString();
             return "Transition " + event + " from " + mFrom.toString() + " to " + mTo.toString();
@@ -193,8 +286,19 @@ public class StateMachine
         }
     }
 
-    public static abstract class State
-            implements Runnable, StateMachine.TransitionEventListener
+    /**
+     * ===========================================================================================
+     * State class
+     *
+     * A State is a machine concept to which is attached an action. Machine can change state
+     * when a specific event occurs. This event allows machine to switch to another state and to
+     * execute some other actions. Actions are attached to either state entering or state exiting.
+     * Machine can only be in a unique state.
+     * ===========================================================================================
+     */
+    public static
+    abstract class State
+        implements Runnable, StateMachine.TransitionEventListener
     {
         private static final String TAG = "StateMachine.State";
 
@@ -206,14 +310,16 @@ public class StateMachine
         private List<StateMachine.TransitionEvent> mIsTargetOf;
         private TransitionEvent mTrigerringEvent = null;
 
-        public State(String name)
+        public
+        State(String name)
         {
             mIsOriginOf = new ArrayList<>(10);
             mIsTargetOf = new ArrayList<>(10);
             mName = name;
         }
 
-        public void setExitAction(Runnable exitAction)
+        public
+        void setExitAction(Runnable exitAction)
         {
             mExitAction = exitAction;
         }
@@ -231,41 +337,58 @@ public class StateMachine
         }
 
         @Override
-        public String toString()
+        public
+        String toString()
         {
             return mName + "{" + super.toString() + "}";
         }
 
-        public boolean isOriginOf(TransitionEvent transition)
+        public
+        boolean isOriginOf(TransitionEvent transition)
         {
             return transition.origin().equals(this);
         }
 
-        public boolean isTargetOf(TransitionEvent transition)
+        public
+        boolean isTargetOf(TransitionEvent transition)
         {
             return transition.target().equals(this);
         }
 
-        public void addAsOriginOf(TransitionEvent transition)
+        public
+        void addAsOriginOf(TransitionEvent transition)
         {
             mIsOriginOf.add(transition);
         }
 
-        public void addAsTargetOf(TransitionEvent transition)
+        public
+        void addAsTargetOf(TransitionEvent transition)
         {
             mIsTargetOf.add(transition);
         }
 
-        public void enter(int millis)
-                throws InterruptedException
+        /**
+         * Method called when a state is entered
+         * @param millis
+         * @throws InterruptedException Raised if something wrong occurs (including timeout)
+         */
+        public
+        void enter(int millis)
+            throws InterruptedException
         {
             Thread thread = new Thread(this);
             thread.start();
             thread.join(millis);
         }
 
-        public void exit(int millis)
-                throws InterruptedException
+        /**
+         * Method called when a state is exited
+         * @param millis
+         * @throws InterruptedException Raised if something wrong occurs (including timeout)
+         */
+        public
+        void exit(int millis)
+            throws InterruptedException
         {
             if (mExitAction != null)
             {
@@ -287,8 +410,12 @@ public class StateMachine
             return this.mTrigerringEvent;
         }
 
+        /**
+         * Unimplemented Runnable method
+         */
         @Override
-        public abstract void run();
+        public abstract
+        void run();
 
     }
 

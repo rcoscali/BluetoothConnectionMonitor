@@ -430,6 +430,7 @@ class StateMachineTest
         public
         void run()
         {
+            Log.v("MyStateMachine", "run: State Machine started ");
             mHandler.obtainMessage(DO_INIT).sendToTarget();
         }
     }
@@ -440,7 +441,8 @@ class StateMachineTest
     {
         @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         public
-        MySurfaceView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        MySurfaceView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes)
+        {
             super(context, attrs, defStyleAttr, defStyleRes);
         }
 
@@ -448,20 +450,21 @@ class StateMachineTest
         public
         void surfaceCreated(SurfaceHolder holder)
         {
-
+            Log.v("MySurfaceView", "surfaceCreated");
         }
 
         @Override
         public
         void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
         {
-
+            Log.v("MySurfaceView", "surfaceChanged");
         }
 
         @Override
         public
-        void surfaceDestroyed(SurfaceHolder holder) {
-
+        void surfaceDestroyed(SurfaceHolder holder)
+        {
+            Log.v("MySurfaceView", "surfaceDestroyed");
         }
     }
 }
