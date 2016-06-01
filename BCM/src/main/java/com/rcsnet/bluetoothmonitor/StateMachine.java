@@ -91,7 +91,8 @@ public class StateMachine
     TransitionEventListener registerTransitionEventListener(TransitionEventListener lsnr)
     {
         synchronized (listeners) {
-            if (!listeners.contains(lsnr)) listeners.add(lsnr);
+            if (!listeners.contains(lsnr))
+                listeners.add(lsnr);
         }
         return lsnr;
     }
@@ -105,7 +106,8 @@ public class StateMachine
     void unregisterTransitionEventListener(TransitionEventListener lsnr)
     {
         synchronized (listeners) {
-            if (listeners.contains(lsnr)) listeners.remove(lsnr);
+            if (listeners.contains(lsnr))
+                listeners.remove(lsnr);
         }
     }
 
